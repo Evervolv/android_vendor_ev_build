@@ -500,11 +500,11 @@ $(TARGET_PREBUILT_INT_KERNEL): $(KERNEL_CONFIG) $(DEPMOD) $(DTC) $(LZ4)
 				($(call make-kernel-modules-target,$$recovery_modules,$(KERNEL_RECOVERY_MODULES_OUT),/,$(KERNEL_RECOVERY_DEPMOD_STAGING_DIR),$(BOARD_RECOVERY_RAMDISK_KERNEL_MODULES_LOAD),/)) || exit "$$?"; \
 			) \
 		fi
-ifeq ($(BOARD_KERNEL_LZ4_COMPRESSION),true)
+ifeq ($(strip $(BOARD_KERNEL_LZ4_COMPRESSION)),true)
 	@echo "Compressing Kernel Image ($(BOARD_KERNEL_IMAGE_NAME))"
 	$(hide) $(LZ4) $(BOARD_KERNEL_LZ4_COMP_FLAGS) $(KERNEL_OUT)/arch/$(KERNEL_ARCH)/boot/$(KERNEL_IMAGE_NAME) $@
 endif
-ifeq ($(BOARD_KERNEL_LEGACY_DTB_APPEND),true)
+ifeq ($(strip $(BOARD_KERNEL_LEGACY_DTB_APPEND)),true)
 	@echo "Appending DTB to Kernel Image ($(BOARD_KERNEL_IMAGE_NAME))"
 	$(hide) cat $(KERNEL_OUT)/arch/$(KERNEL_ARCH)/boot/$(KERNEL_IMAGE_NAME) $(KERNEL_OUT)/arch/$(KERNEL_ARCH)/boot/dts/$(TARGET_KERNEL_DTB) > $@
 endif
@@ -618,10 +618,19 @@ $(RECOVERY_KERNEL_CONFIG): $(ALL_RECOVERY_KERNEL_DEFCONFIG_SRCS)
 	$(call make-kernel-config,$(RECOVERY_KERNEL_OUT),$(RECOVERY_DEFCONFIG))
 
 $(TARGET_PREBUILT_INT_RECOVERY_KERNEL): $(RECOVERY_KERNEL_CONFIG) $(DEPMOD) $(DTC)
-	@echo "Building Recovery Kernel Image ($(BOARD_KERNEL_IMAGE_NAME))"
+	@echo "Building Recovery Kernel Image ($(KERNEL_IMAGE_NAME))"
 	$(call make-recovery-kernel-target,$(KERNEL_IMAGE_NAME))
 ifeq ($(strip $(BOARD_KERNEL_LZ4_COMPRESSION)),true)
+	@echo "Compressing Kernel Image ($(BOARD_KERNEL_IMAGE_NAME))"
 	$(hide) $(LZ4) $(BOARD_KERNEL_LZ4_COMP_FLAGS) $(RECOVERY_KERNEL_OUT)/arch/$(KERNEL_ARCH)/boot/$(KERNEL_IMAGE_NAME) $@
+endif
+ifeq ($(strip $(BOARD_KERNEL_LEGACY_DTB_APPEND)),true)
+	@echo "Appending DTB to Kernel Image ($(BOARD_KERNEL_IMAGE_NAME))"
+	$(hide) if grep -q '^CONFIG_OF=y' $(RECOVERY_KERNEL_CONFIG); then \
+			echo "Building DTBs"; \
+			$(call make-recovery-kernel-target,dtbs); \
+		fi
+	$(hide) cat $(RECOVERY_KERNEL_OUT)/arch/$(KERNEL_ARCH)/boot/$(KERNEL_IMAGE_NAME) $(RECOVERY_KERNEL_OUT)/arch/$(KERNEL_ARCH)/boot/dts/$(TARGET_KERNEL_DTB) > $@
 endif
 
 endif
