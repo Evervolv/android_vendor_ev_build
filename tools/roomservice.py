@@ -86,16 +86,20 @@ def add_auth(githubreq):
     if githubauth:
         githubreq.add_header("Authorization","Basic %s" % githubauth)
 
-page = 1
-while not depsonly:
-    githubreq = urllib.request.Request("https://api.github.com/users/Evervolv/repos?per_page=100&page=%d" % page)
+if not depsonly:
+    githubreq = urllib.request.Request("https://api.github.com/search/repositories?q=%s+user:Evervolv+in:name+fork:true" % device)
     add_auth(githubreq)
     result = json.loads(urllib.request.urlopen(githubreq).read().decode())
-    if len(result) == 0:
-        break
-    for res in result:
+    try:
+        numresults = int(result['total_count'])
+    except:
+        print("Failed to search GitHub (offline?)")
+        sys.exit()
+    if (numresults == 0):
+        print("Could not find device %s on github.com/Evervolv" % device)
+        sys.exit()
+    for res in result['items']:
         repositories.append(res)
-    page = page + 1
 
 def exists_in_tree(lm, path):
     for child in lm.getchildren():
