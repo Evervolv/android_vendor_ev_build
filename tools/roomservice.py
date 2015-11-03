@@ -41,7 +41,7 @@ except ImportError:
 
 from xml.etree import ElementTree
 
-product = sys.argv[1];
+product = sys.argv[1]
 local_manifests_dir = ".repo/local_manifests"
 dependency_filename = 'ev.dependencies'
 repositories = []
@@ -76,7 +76,8 @@ try:
     authtuple = netrc.netrc().authenticators("api.github.com")
 
     if authtuple:
-        githubauth = base64.encodestring('%s:%s' % (authtuple[0], authtuple[2])).replace('\n', '')
+        auth_string = ('%s:%s' % (authtuple[0], authtuple[2])).encode()
+        githubauth = base64.encodestring(auth_string).decode().replace('\n', '')
     else:
         githubauth = None
 except:
@@ -93,11 +94,11 @@ if not depsonly:
     try:
         numresults = int(result['total_count'])
     except:
-        print("Failed to search GitHub (offline?)")
-        sys.exit()
+        print("Failed to search GitHub")
+        sys.exit(1)
     if (numresults == 0):
-        print("Could not find device %s on github.com/Evervolv" % device)
-        sys.exit()
+        print("Failed to parse return data from GitHub")
+        sys.exit(1)
     for res in result['items']:
         repositories.append(res)
 
