@@ -18,7 +18,6 @@ $(call inherit-product, device/google/atv/products/aosp_tv_arm.mk)
 include $(SRC_EVERVOLV_DIR)/build/build/target/product/ev_generic_tv_target.mk
 
 TARGET_NO_KERNEL_OVERRIDE := true
-TARGET_USES_64_BIT_BINDER := true
 
 PRODUCT_NAME := ev_gsi_tv_arm
 
