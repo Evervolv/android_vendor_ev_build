@@ -65,6 +65,9 @@
 #   NEED_KERNEL_MODULE_VENDOR_OVERLAY  = Optional, if true, install kernel
 #                                          modules in vendor_overlay instead of vendor
 #
+#   TARGET_FORCE_PREBUILT_KERNEL       = Optional, use TARGET_PREBUILT_KERNEL even if
+#                                          kernel sources are present
+#
 #   TARGET_MERGE_DTBS_WILDCARD         = Optional, limits the .dtb files used to generate the
 #                                          final DTB image. Deprecated.
 #   TARGET_DTB_LIST_WILDCARD           = Optional, similar to the above one, but allows multiple
@@ -183,8 +186,23 @@ else
         $(warning **********************************************************)
         $(error "NO KERNEL CONFIG")
     else
-        FULL_KERNEL_BUILD := true
-        KERNEL_BIN := $(TARGET_PREBUILT_INT_KERNEL)
+        ifneq ($(TARGET_FORCE_PREBUILT_KERNEL),)
+            $(warning **********************************************************)
+            $(warning * Kernel source found and configuration was defined,     *)
+            $(warning * but prebuilt kernel is being forced.                   *)
+            $(warning * While this is likely intentional,                      *)
+            $(warning * it is NOT SUPPORTED WHATSOEVER.                        *)
+            $(warning * Generated kernel headers may not align with            *)
+            $(warning * the ABI of kernel you're including.                    *)
+            $(warning * Please unset TARGET_FORCE_PREBUILT_KERNEL              *)
+            $(warning * to build the kernel from source.                       *)
+            $(warning **********************************************************)
+            FULL_KERNEL_BUILD := false
+            KERNEL_BIN := $(TARGET_PREBUILT_KERNEL)
+        else
+            FULL_KERNEL_BUILD := true
+            KERNEL_BIN := $(TARGET_PREBUILT_INT_KERNEL)
+        endif
     endif
 endif
 

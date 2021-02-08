@@ -83,9 +83,6 @@ endif
 # Set the default kernel source
 TARGET_AUTO_KDIR := $(shell echo $(TARGET_DEVICE_DIR) | sed -e 's/^device/kernel/g')
 TARGET_KERNEL_SOURCE ?= $(TARGET_AUTO_KDIR)
-ifneq ($(TARGET_PREBUILT_KERNEL),)
-    TARGET_KERNEL_SOURCE :=
-endif
 
 # Kernel version
 KERNEL_VERSION := $(shell grep -s "^VERSION = " $(TARGET_KERNEL_SOURCE)/Makefile | awk '{ print $$3 }')
