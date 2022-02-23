@@ -1,3 +1,6 @@
+# Recovery
+BOARD_USES_FULL_RECOVERY_IMAGE ?= true
+
 # Include kernel configs
 include $(SRC_EVERVOLV_DIR)/build/target/board/BoardConfigKernel.mk
 
