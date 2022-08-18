@@ -28,8 +28,6 @@
 #
 #   TARGET_KERNEL_CLANG_COMPILE        = Compile kernel with clang, defaults to true
 #
-#   TARGET_KERNEL_CLANG_VERSION        = Clang prebuilts version, optional
-#
 #   TARGET_KERNEL_CLANG_PATH           = Clang prebuilts path, optional
 #
 #   TARGET_KERNEL_VERSION              = Reported kernel version in top level kernel
@@ -113,8 +111,7 @@ endif
 
 # LLVM
 TARGET_KERNEL_CLANG_COMPILE ?= true
-TARGET_KERNEL_CLANG_VERSION ?= r450784d
-TARGET_KERNEL_CLANG_PATH ?= $(BUILD_TOP)/prebuilts/clang/host/$(HOST_PREBUILT_TAG)/clang-$(TARGET_KERNEL_CLANG_VERSION)
+TARGET_KERNEL_CLANG_PATH ?= $(BUILD_TOP)/prebuilts/evervolv-tools/$(HOST_PREBUILT_TAG)/clang-r416183b
 
 # GCC
 GCC_PREBUILTS := $(BUILD_TOP)/prebuilts/gcc/$(HOST_PREBUILT_TAG)
