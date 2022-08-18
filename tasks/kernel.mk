@@ -31,10 +31,6 @@
 #
 #   TARGET_KERNEL_CLANG_COMPILE        = Compile kernel with clang, defaults to true
 #
-#   TARGET_KERNEL_CLANG_VERSION        = Clang prebuilts version, optional, defaults to clang-stable
-#
-#   TARGET_KERNEL_CLANG_PATH           = Clang prebuilts path, optional
-#
 #   BOARD_KERNEL_IMAGE_NAME            = Built image name
 #                                          for ARM use: zImage
 #                                          for ARM64 use: Image.gz
@@ -217,16 +213,22 @@ else
 endif
 
 ifeq ($(or $(FULL_RECOVERY_KERNEL_BUILD), $(FULL_KERNEL_BUILD)),true)
+
+ifneq ($(TARGET_KERNEL_MODULES),)
+    $(error TARGET_KERNEL_MODULES is no longer supported!)
+endif
+
 # Add host bin out dir to path
 PATH_OVERRIDE := PATH=$(KERNEL_BUILD_OUT_PREFIX)$(HOST_OUT_EXECUTABLES):$$PATH
+
+# System tools are no longer allowed on 10+
+PATH_OVERRIDE += $(TOOLS_PATH_OVERRIDE)
+
 ifneq ($(TARGET_KERNEL_CLANG_COMPILE),false)
-    ifneq ($(TARGET_KERNEL_CLANG_VERSION),)
-        KERNEL_CLANG_VERSION := clang-$(TARGET_KERNEL_CLANG_VERSION)
-    else
-        # Use the default version of clang if TARGET_KERNEL_CLANG_VERSION hasn't been set by the device config
-        KERNEL_CLANG_VERSION := $(LLVM_PREBUILTS_VERSION)
-    endif
-    TARGET_KERNEL_CLANG_PATH ?= $(BUILD_TOP)/prebuilts/clang/host/$(HOST_PREBUILT_TAG)/$(KERNEL_CLANG_VERSION)
+    PATH_OVERRIDE += \
+        PATH=$(TARGET_KERNEL_CLANG_PATH)/bin:$$PATH \
+        LD_LIBRARY_PATH=$(TARGET_KERNEL_CLANG_PATH)/lib64:$$LD_LIBRARY_PATH
+
     ifeq ($(KERNEL_ARCH),arm64)
         KERNEL_CLANG_TRIPLE ?= CLANG_TRIPLE=aarch64-linux-gnu-
     else ifeq ($(KERNEL_ARCH),arm)
@@ -234,7 +236,6 @@ ifneq ($(TARGET_KERNEL_CLANG_COMPILE),false)
     else ifeq ($(KERNEL_ARCH),x86)
         KERNEL_CLANG_TRIPLE ?= CLANG_TRIPLE=x86_64-linux-gnu-
     endif
-    PATH_OVERRIDE += PATH=$(TARGET_KERNEL_CLANG_PATH)/bin:$$PATH LD_LIBRARY_PATH=$(TARGET_KERNEL_CLANG_PATH)/lib64:$$LD_LIBRARY_PATH
     ifeq ($(KERNEL_CC),)
         KERNEL_CC := CC="$(CCACHE_BIN) clang"
     endif
@@ -242,15 +243,6 @@ ifneq ($(TARGET_KERNEL_CLANG_COMPILE),false)
         KERNEL_LD :=
     endif
 endif
-
-ifneq ($(TARGET_KERNEL_MODULES),)
-    $(error TARGET_KERNEL_MODULES is no longer supported!)
-endif
-
-PATH_OVERRIDE += PATH=$(KERNEL_TOOLCHAIN_PATH_gcc):$$PATH
-
-# System tools are no longer allowed on 10+
-PATH_OVERRIDE += $(TOOLS_PATH_OVERRIDE)
 
 ifeq (true,$(filter true, $(TARGET_NEEDS_DTBOIMAGE) $(BOARD_KERNEL_SEPARATED_DTBO)))
     KERNEL_MAKE_FLAGS += DTC_EXT=$(KERNEL_BUILD_OUT_PREFIX)$(DTC)
@@ -464,7 +456,6 @@ alldefconfig: $(KERNEL_OUT)
 
 MKDTIMG := $(HOST_OUT_EXECUTABLES)/mkdtimg$(HOST_EXECUTABLE_SUFFIX)
 MKDTBOIMG := $(HOST_OUT_EXECUTABLES)/mkdtboimg.py
-
 MKDTBOIMG_FLAGS :=
 ifneq ($(BOARD_KERNEL_PAGESIZE),)
 MKDTBOIMG_FLAGS += --page_size=$(BOARD_KERNEL_PAGESIZE)
@@ -477,13 +468,6 @@ else
 $(DTBO_OUT):
 	mkdir -p $(DTBO_OUT)
 
-ifneq ($(TARGET_KERNEL_DTBO_FILES),)
-KERNEL_DTBO_FILES := 
-$(foreach dtbo,$(TARGET_KERNEL_DTBO_FILES), \
-	$(eval KERNEL_DTBO_FILES += $(DTBO_OUT)/arch/$(KERNEL_ARCH)/boot/dts/$(dtbo)))
-endif # TARGET_KERNEL_DTBO_FILES
-KERNEL_DTBO_FILES ?= $(shell find $(DTBO_OUT)/arch/$(KERNEL_ARCH)/boot/dts -type f -name "*.dtbo" | sort)
-
 $(BOARD_PREBUILT_DTBOIMAGE): $(DTC) $(MKDTIMG) $(MKDTBOIMG) $(DTBO_OUT)
 $(BOARD_PREBUILT_DTBOIMAGE):
 	@echo "Building dtbo.img"
@@ -494,7 +478,7 @@ ifeq ($(BOARD_KERNEL_SEPARATED_DTBO),true)
 ifdef BOARD_DTBO_CFG
 	$(MKDTBOIMG) cfg_create $@ $(BOARD_DTBO_CFG) -d $(DTBO_OUT)/arch/$(KERNEL_ARCH)/boot/dts
 else
-	$(MKDTBOIMG) create $@ $(MKDTBOIMG_FLAGS) $(KERNEL_DTBO_FILES)
+	$(MKDTBOIMG) create $@ $(MKDTBOIMG_FLAGS) $(shell find $(DTBO_OUT)/arch/$(KERNEL_ARCH)/boot/dts -type f -name "*.dtbo" | sort)
 endif # BOARD_DTBO_CFG
 else
 	$(call make-dtbo-target,$(TARGET_KERNEL_DTBO))
@@ -508,12 +492,6 @@ ifeq ($(BOARD_PREBUILT_DTBIMAGE_DIR),)
 $(DTB_OUT):
 	mkdir -p $(DTB_OUT)
 
-ifneq ($(TARGET_KERNEL_DTB_FILES),)
-$(foreach dtb,$(TARGET_KERNEL_DTB_FILES), \
-	$(eval KERNEL_DTB_FILES += $(DTB_OUT)/arch/$(KERNEL_ARCH)/boot/dts/$(dtb)))
-endif # TARGET_KERNEL_DTB_FILES
-KERNEL_DTB_FILES ?= $(shell find $(DTB_OUT)/arch/$(KERNEL_ARCH)/boot/dts -type f -name "*.dtb" | sort)
-
 $(INSTALLED_DTBIMAGE_TARGET): $(DTC) $(DTB_OUT) $(MKDTBOIMG)
 	@echo "Building dtb.img"
 	$(hide) find $(DTB_OUT)/arch/$(KERNEL_ARCH)/boot/dts -type f -name "*.dtb" | xargs rm -f
@@ -522,7 +500,7 @@ $(INSTALLED_DTBIMAGE_TARGET): $(DTC) $(DTB_OUT) $(MKDTBOIMG)
 ifdef BOARD_DTB_CFG
 	$(MKDTBOIMG) cfg_create $@ $(BOARD_DTB_CFG) -d $(DTB_OUT)/arch/$(KERNEL_ARCH)/boot/dts
 else
-	cat $(KERNEL_DTB_FILES) > $@
+	cat $(shell find $(DTB_OUT)/arch/$(KERNEL_ARCH)/boot/dts -type f -name "*.dtb" | sort) > $@
 endif # BOARD_DTB_CFG
 	$(hide) touch -c $(DTB_OUT)
 endif # !BOARD_PREBUILT_DTBIMAGE_DIR
