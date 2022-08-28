@@ -28,6 +28,8 @@
 #
 #   TARGET_KERNEL_CLANG_COMPILE        = Compile kernel with clang, defaults to true
 #
+#   TARGET_KERNEL_CLANG_VERSION        = Clang prebuilts version, optional
+#
 #   TARGET_KERNEL_CLANG_PATH           = Clang prebuilts path, optional
 #
 #   TARGET_KERNEL_VERSION              = Reported kernel version in top level kernel
@@ -91,7 +93,7 @@ endif
 TARGET_KERNEL_DTB ?= dtbs
 
 # Device tree overlay
-ifeq (true,$(filter true, $(TARGET_NEEDS_DTBOIMAGE) $(BOARD_KERNEL_SEPARATED_DTBO)))
+ifeq ($(filter true, $(TARGET_NEEDS_DTBOIMAGE) $(BOARD_KERNEL_SEPARATED_DTBO)),true)
 TARGET_KERNEL_DTBO_PREFIX ?=
 TARGET_KERNEL_DTBO ?= dtbo.img
 BOARD_PREBUILT_DTBOIMAGE ?= $(TARGET_OUT_INTERMEDIATES)/DTBO_OBJ/arch/$(KERNEL_ARCH)/boot/$(TARGET_KERNEL_DTBO_PREFIX)$(TARGET_KERNEL_DTBO)
@@ -109,9 +111,19 @@ ifneq ($(USE_CCACHE),)
     endif
 endif
 
+# Set default LLVM path
+
+
 # LLVM
 TARGET_KERNEL_CLANG_COMPILE ?= true
-TARGET_KERNEL_CLANG_PATH ?= $(BUILD_TOP)/prebuilts/evervolv-tools/$(HOST_PREBUILT_TAG)/clang-r416183b
+ifeq ($(filter 5.10 5.15, $(TARGET_KERNEL_VERSION)),)
+TARGET_KERNEL_CLANG_VERSION := r416183b
+endif
+TARGET_KERNEL_CLANG_VERSION ?= r450784d
+ifneq ($(filter r416183b, $(DEFAULT_CLANG_VERSION)),)
+TARGET_KERNEL_CLANG_PATH := $(BUILD_TOP)/prebuilts/evervolv-tools/$(HOST_PREBUILT_TAG)/clang-$(TARGET_KERNEL_CLANG_VERSION)
+endif
+TARGET_KERNEL_CLANG_PATH ?= $(BUILD_TOP)/prebuilts/clang/host/$(HOST_PREBUILT_TAG)/clang-$(TARGET_KERNEL_CLANG_VERSION)
 
 # GCC
 GCC_PREBUILTS := $(BUILD_TOP)/prebuilts/gcc/$(HOST_PREBUILT_TAG)
@@ -197,10 +209,10 @@ else
 endif
 
 ifneq ($(TARGET_KERNEL_CLANG_COMPILE),false)
-    # Use LLVM's substitutes for GNU binutils if compatible kernel version.
-    ifneq (,$(filter 5.4 5.10, $(TARGET_KERNEL_VERSION)))
+    ifneq ($(filter 5.4 5.10, $(TARGET_KERNEL_VERSION)),)
+        # Use LLVM's substitutes for GNU binutils if compatible kernel version.
         KERNEL_MAKE_FLAGS += LLVM=1
-        ifneq (,$(filter 5.10, $(TARGET_KERNEL_VERSION)))
+        ifneq ($(filter 5.10, $(TARGET_KERNEL_VERSION)),)
             KERNEL_MAKE_FLAGS += LLVM_IAS=1
         endif
     endif
