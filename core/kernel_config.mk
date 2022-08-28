@@ -215,5 +215,7 @@ ifneq ($(TARGET_KERNEL_CLANG_COMPILE),false)
         ifneq ($(filter 5.10, $(TARGET_KERNEL_VERSION)),)
             KERNEL_MAKE_FLAGS += LLVM_IAS=1
         endif
+        KERNEL_MAKE_FLAGS += LD=$(TARGET_KERNEL_CLANG_PATH)/bin/ld.lld
+        KERNEL_MAKE_FLAGS += AR=$(TARGET_KERNEL_CLANG_PATH)/bin/llvm-ar
     endif
 endif
