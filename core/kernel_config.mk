@@ -26,8 +26,6 @@
 #                                                      aarch64-linux-android- for arm64
 #                                                      x86_64-linux-android- for x86
 #
-#   TARGET_KERNEL_CLANG_COMPILE        = Compile kernel with clang, defaults to true
-#
 #   TARGET_KERNEL_LLVM_BINUTILS        = Use LLVM's substitutes for GNU binutils
 #
 #   TARGET_KERNEL_CLANG_VERSION        = Clang prebuilts version, optional
@@ -154,11 +152,7 @@ KERNEL_TOOLCHAIN ?= $(KERNEL_TOOLCHAIN_$(KERNEL_ARCH))
 KERNEL_TOOLCHAIN_PREFIX ?= $(KERNEL_TOOLCHAIN_PREFIX_$(KERNEL_ARCH))
 KERNEL_TOOLCHAIN_PATH ?= $(KERNEL_TOOLCHAIN)/$(KERNEL_TOOLCHAIN_PREFIX)
 
-ifneq ($(TARGET_KERNEL_CLANG_COMPILE),false)
-    KERNEL_CROSS_COMPILE := CROSS_COMPILE="$(KERNEL_TOOLCHAIN_PATH)"
-else
-    KERNEL_CROSS_COMPILE := CROSS_COMPILE="$(CCACHE_BIN) $(KERNEL_TOOLCHAIN_PATH)"
-endif
+KERNEL_CROSS_COMPILE := CROSS_COMPILE="$(KERNEL_TOOLCHAIN_PATH)"
 
 # Needed for CONFIG_COMPAT_VDSO, safe to set for all arm64 builds
 ifeq ($(KERNEL_ARCH),arm64)
@@ -166,19 +160,19 @@ ifeq ($(KERNEL_ARCH),arm64)
    KERNEL_CROSS_COMPILE += CROSS_COMPILE_COMPAT="$(KERNEL_TOOLCHAIN_arm)/$(KERNEL_TOOLCHAIN_PREFIX_arm)"
 endif
 
-ifneq ($(TARGET_KERNEL_CLANG_COMPILE),false)
-    ifeq ($(KERNEL_ARCH),arm64)
-        KERNEL_CLANG_TRIPLE ?= CLANG_TRIPLE=aarch64-linux-gnu-
-    else ifeq ($(KERNEL_ARCH),arm)
-        KERNEL_CLANG_TRIPLE ?= CLANG_TRIPLE=arm-linux-gnu-
-    else ifeq ($(KERNEL_ARCH),x86)
-        KERNEL_CLANG_TRIPLE ?= CLANG_TRIPLE=x86_64-linux-gnu-
-    endif
-    ifeq ($(KERNEL_CC),)
-        KERNEL_CC := CC="$(CCACHE_BIN) clang"
-    endif
-    KERNEL_CROSS_COMPILE += $(KERNEL_CLANG_TRIPLE) $(KERNEL_CC)
+ifeq ($(KERNEL_ARCH),arm64)
+    KERNEL_CLANG_TRIPLE ?= CLANG_TRIPLE=aarch64-linux-gnu-
+else ifeq ($(KERNEL_ARCH),arm)
+    KERNEL_CLANG_TRIPLE ?= CLANG_TRIPLE=arm-linux-gnu-
+else ifeq ($(KERNEL_ARCH),x86)
+    KERNEL_CLANG_TRIPLE ?= CLANG_TRIPLE=x86_64-linux-gnu-
 endif
+
+ifeq ($(KERNEL_CC),)
+    KERNEL_CC := CC="$(CCACHE_BIN) clang"
+endif
+
+KERNEL_CROSS_COMPILE += $(KERNEL_CLANG_TRIPLE) $(KERNEL_CC)
 
 # Set paths for prebuilt tools
 SYSTEM_TOOLS := $(BUILD_TOP)/prebuilts/build-tools
@@ -189,17 +183,13 @@ TOOLS_PATH_OVERRIDE := \
     LD_LIBRARY_PATH=$(EXTRA_TOOLS)/$(HOST_PREBUILT_TAG)/lib:$$LD_LIBRARY_PATH \
     PERL5LIB=$(EXTRA_TOOLS)/common/perl-base \
     PATH=$(EXTRA_TOOLS)/$(HOST_PREBUILT_TAG)/bin:$$PATH \
-    PATH=$(KERNEL_TOOLCHAIN_$(KERNEL_ARCH)):$$PATH
+    PATH=$(KERNEL_TOOLCHAIN_$(KERNEL_ARCH)):$$PATH \
+    PATH=$(TARGET_KERNEL_CLANG_PATH)/bin:$$PATH \
+    LD_LIBRARY_PATH=$(TARGET_KERNEL_CLANG_PATH)/lib64:$$LD_LIBRARY_PATH
 
 ifeq ($(KERNEL_ARCH),arm64)
 TOOLS_PATH_OVERRIDE += \
     PATH=$(KERNEL_TOOLCHAIN_arm):$$PATH
-endif
-
-ifneq ($(TARGET_KERNEL_CLANG_COMPILE),false)
-TOOLS_PATH_OVERRIDE += \
-    PATH=$(TARGET_KERNEL_CLANG_PATH)/bin:$$PATH \
-    LD_LIBRARY_PATH=$(TARGET_KERNEL_CLANG_PATH)/lib64:$$LD_LIBRARY_PATH
 endif
 
 # Set use the full path to the make command
@@ -220,18 +210,6 @@ KERNEL_MAKE_FLAGS += \
 # Add back threads, ninja cuts this to $(nproc)/2
 KERNEL_MAKE_FLAGS += -j$(shell $(EXTRA_TOOLS)/$(HOST_PREBUILT_TAG)/bin/nproc --all)
 
-ifeq ($(TARGET_KERNEL_CLANG_COMPILE),false)
-  ifeq ($(KERNEL_ARCH),arm)
-    # Avoid "Unknown symbol _GLOBAL_OFFSET_TABLE_" errors
-    KERNEL_MAKE_FLAGS += CFLAGS_MODULE="-fno-pic"
-  endif
-
-  ifeq ($(KERNEL_ARCH),arm64)
-    # Avoid "unsupported RELA relocation: 311" errors (R_AARCH64_ADR_GOT_PAGE)
-    KERNEL_MAKE_FLAGS += CFLAGS_MODULE="-fno-pic"
-  endif
-endif
-
 ifeq ($(HOST_OS),darwin)
   KERNEL_MAKE_FLAGS += HOSTCFLAGS="-I$(BUILD_TOP)/external/elfutils/libelf -I/usr/local/opt/openssl/include -fuse-ld=lld" HOSTLDFLAGS="-L/usr/local/opt/openssl/lib -fuse-ld=lld"
 else
@@ -242,9 +220,7 @@ else
 endif
 
 # Use LLVM's substitutes for GNU binutils if compatible kernel version.
-ifneq ($(TARGET_KERNEL_CLANG_COMPILE),false)
-    ifneq ($(TARGET_KERNEL_LLVM_BINUTILS),false)
-        KERNEL_MAKE_FLAGS += LLVM=1 LLVM_IAS=1
-        KERNEL_MAKE_FLAGS += AR=$(TARGET_KERNEL_CLANG_PATH)/bin/llvm-ar
-    endif
+ifneq ($(TARGET_KERNEL_LLVM_BINUTILS),false)
+    KERNEL_MAKE_FLAGS += LLVM=1 LLVM_IAS=1
+    KERNEL_MAKE_FLAGS += AR=$(TARGET_KERNEL_CLANG_PATH)/bin/llvm-ar
 endif
