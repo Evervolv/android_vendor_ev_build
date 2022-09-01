@@ -56,6 +56,14 @@
 #   KERNEL_TOOLCHAIN                   = Path to toolchain, if unset, assumes
 #                                          TARGET_KERNEL_CROSS_COMPILE_PREFIX
 #                                          is in PATH
+#
+#   KERNEL_CC                          = The C Compiler used. This is automatically set based
+#                                          on whether the clang version is set, optional.
+#
+#   KERNEL_CLANG_TRIPLE                = Target triple for clang (e.g. aarch64-linux-gnu-)
+#                                          defaults to arm-linux-gnu- for arm
+#                                                      aarch64-linux-gnu- for arm64
+#                                                      x86_64-linux-gnu- for x86
 #   USE_CCACHE                         = Enable ccache (global Android flag)
 
 BUILD_TOP := $(abspath .)
@@ -154,6 +162,20 @@ ifeq ($(KERNEL_ARCH),arm64)
    KERNEL_CROSS_COMPILE += CROSS_COMPILE_COMPAT="$(KERNEL_TOOLCHAIN_arm)/$(KERNEL_TOOLCHAIN_PREFIX_arm)"
 endif
 
+ifneq ($(TARGET_KERNEL_CLANG_COMPILE),false)
+    ifeq ($(KERNEL_ARCH),arm64)
+        KERNEL_CLANG_TRIPLE ?= CLANG_TRIPLE=aarch64-linux-gnu-
+    else ifeq ($(KERNEL_ARCH),arm)
+        KERNEL_CLANG_TRIPLE ?= CLANG_TRIPLE=arm-linux-gnu-
+    else ifeq ($(KERNEL_ARCH),x86)
+        KERNEL_CLANG_TRIPLE ?= CLANG_TRIPLE=x86_64-linux-gnu-
+    endif
+    ifeq ($(KERNEL_CC),)
+        KERNEL_CC := CC="$(CCACHE_BIN) clang"
+    endif
+    KERNEL_CROSS_COMPILE += $(KERNEL_CLANG_TRIPLE) $(KERNEL_CC)
+endif
+
 # Set paths for prebuilt tools
 SYSTEM_TOOLS := $(BUILD_TOP)/prebuilts/build-tools
 EXTRA_TOOLS := $(BUILD_TOP)/prebuilts/evervolv-tools
@@ -168,6 +190,12 @@ TOOLS_PATH_OVERRIDE := \
 ifeq ($(KERNEL_ARCH),arm64)
 TOOLS_PATH_OVERRIDE += \
     PATH=$(KERNEL_TOOLCHAIN_arm):$$PATH
+endif
+
+ifneq ($(TARGET_KERNEL_CLANG_COMPILE),false)
+TOOLS_PATH_OVERRIDE += \
+    PATH=$(TARGET_KERNEL_CLANG_PATH)/bin:$$PATH \
+    LD_LIBRARY_PATH=$(TARGET_KERNEL_CLANG_PATH)/lib64:$$LD_LIBRARY_PATH
 endif
 
 # Set use the full path to the make command
