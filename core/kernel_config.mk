@@ -28,6 +28,8 @@
 #
 #   TARGET_KERNEL_CLANG_COMPILE        = Compile kernel with clang, defaults to true
 #
+#   TARGET_KERNEL_LLVM_BINUTILS        = Use LLVM's substitutes for GNU binutils
+#
 #   TARGET_KERNEL_CLANG_VERSION        = Clang prebuilts version, optional
 #
 #   TARGET_KERNEL_CLANG_PATH           = Clang prebuilts path, optional
@@ -119,12 +121,13 @@ ifneq ($(USE_CCACHE),)
     endif
 endif
 
-# Set default LLVM path
-
-
 # LLVM
 TARGET_KERNEL_CLANG_COMPILE ?= true
-ifeq ($(filter 5.10 5.15, $(TARGET_KERNEL_VERSION)),)
+ifneq ($(filter 5.10 5.15, $(TARGET_KERNEL_VERSION)),)
+TARGET_KERNEL_LLVM_BINUTILS := true
+endif
+TARGET_KERNEL_LLVM_BINUTILS ?= false
+ifeq ($(TARGET_KERNEL_LLVM_BINUTILS),false)
 TARGET_KERNEL_CLANG_VERSION ?= r416183b
 else
 TARGET_KERNEL_CLANG_VERSION ?= r450784d
@@ -238,9 +241,9 @@ else
   endif
 endif
 
+# Use LLVM's substitutes for GNU binutils if compatible kernel version.
 ifneq ($(TARGET_KERNEL_CLANG_COMPILE),false)
-    ifneq ($(filter 5.4 5.10, $(TARGET_KERNEL_VERSION)),)
-        # Use LLVM's substitutes for GNU binutils if compatible kernel version.
+    ifneq ($(TARGET_KERNEL_LLVM_BINUTILS),false)
         KERNEL_MAKE_FLAGS += LLVM=1 LLVM_IAS=1
         KERNEL_MAKE_FLAGS += AR=$(TARGET_KERNEL_CLANG_PATH)/bin/llvm-ar
     endif
