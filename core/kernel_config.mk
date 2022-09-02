@@ -125,10 +125,11 @@ endif
 # LLVM
 TARGET_KERNEL_CLANG_COMPILE ?= true
 ifeq ($(filter 5.10 5.15, $(TARGET_KERNEL_VERSION)),)
-TARGET_KERNEL_CLANG_VERSION := r416183b
-endif
+TARGET_KERNEL_CLANG_VERSION ?= r416183b
+else
 TARGET_KERNEL_CLANG_VERSION ?= r450784d
-ifneq ($(filter r416183b, $(DEFAULT_CLANG_VERSION)),)
+endif
+ifeq ($(TARGET_KERNEL_CLANG_VERSION),r416183b)
 TARGET_KERNEL_CLANG_PATH := $(BUILD_TOP)/prebuilts/evervolv-tools/$(HOST_PREBUILT_TAG)/clang-$(TARGET_KERNEL_CLANG_VERSION)
 endif
 TARGET_KERNEL_CLANG_PATH ?= $(BUILD_TOP)/prebuilts/clang/host/$(HOST_PREBUILT_TAG)/clang-$(TARGET_KERNEL_CLANG_VERSION)
@@ -210,7 +211,8 @@ KERNEL_MAKE_FLAGS += \
     HOSTCXX=$(TARGET_KERNEL_CLANG_PATH)/bin/clang++ \
     LEX=$(SYSTEM_TOOLS)/$(HOST_PREBUILT_TAG)/bin/flex \
     YACC=$(SYSTEM_TOOLS)/$(HOST_PREBUILT_TAG)/bin/bison \
-    M4=$(SYSTEM_TOOLS)/$(HOST_PREBUILT_TAG)/bin/m4
+    M4=$(SYSTEM_TOOLS)/$(HOST_PREBUILT_TAG)/bin/m4 \
+    LD=$(TARGET_KERNEL_CLANG_PATH)/bin/ld.lld
 
 # Add back threads, ninja cuts this to $(nproc)/2
 KERNEL_MAKE_FLAGS += -j$(shell $(EXTRA_TOOLS)/$(HOST_PREBUILT_TAG)/bin/nproc --all)
@@ -240,7 +242,6 @@ ifneq ($(TARGET_KERNEL_CLANG_COMPILE),false)
     ifneq ($(filter 5.4 5.10, $(TARGET_KERNEL_VERSION)),)
         # Use LLVM's substitutes for GNU binutils if compatible kernel version.
         KERNEL_MAKE_FLAGS += LLVM=1 LLVM_IAS=1
-        KERNEL_MAKE_FLAGS += LD=$(TARGET_KERNEL_CLANG_PATH)/bin/ld.lld
         KERNEL_MAKE_FLAGS += AR=$(TARGET_KERNEL_CLANG_PATH)/bin/llvm-ar
     endif
 endif
