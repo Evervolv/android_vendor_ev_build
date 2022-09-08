@@ -131,10 +131,6 @@ else
     TARGET_KERNEL_NO_GCC ?= true
 endif
 
-ifeq ($(TARGET_KERNEL_NO_GCC),true)
-    TARGET_KERNEL_LLVM_BINUTILS := true
-endif
-
 # 6.11+ can no longer use aosp glibc sysroot headers (too old)
 ifeq ($(shell [ $(TARGET_KERNEL_VERSION_INT) -gt 611000 ] && echo 1 || echo 0), 1)
     TARGET_KERNEL_LIBC_SYSROOT_USE ?= host
@@ -264,7 +260,7 @@ LLVM_KERNEL_MAKE_FLAGS += \
     AR=$(TARGET_KERNEL_CLANG_PATH)/bin/llvm-ar \
     LD=$(TARGET_KERNEL_CLANG_PATH)/bin/ld.lld
 
-ifeq ($(TARGET_KERNEL_LLVM_BINUTILS),true)
+ifneq ($(TARGET_KERNEL_LLVM_BINUTILS),false)
     ifneq ($(TARGET_KERNEL_NO_GCC),true)
         KERNEL_MAKE_FLAGS += $(LLVM_KERNEL_MAKE_FLAGS)
     endif
@@ -294,7 +290,7 @@ else
 endif
 
 # Use LLVM's substitutes for GNU binutils if compatible kernel version.
-ifeq ($(TARGET_KERNEL_LLVM_BINUTILS),true)
+ifneq ($(TARGET_KERNEL_LLVM_BINUTILS),false)
     KERNEL_MAKE_FLAGS += LLVM=1 LLVM_IAS=1
     ifneq ($(TARGET_KERNEL_NO_GCC),true)
         ifneq (,$(findstring LLVM_IAS=0,$(TARGET_KERNEL_ADDITIONAL_FLAGS)))
