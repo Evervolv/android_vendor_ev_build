@@ -20,7 +20,7 @@ $(call set-device-specific-path,MEDIA,media,hardware/qcom-caf/$(QCOM_HARDWARE_VA
 
 $(call set-device-specific-path,BT_VENDOR,bt-vendor,hardware/qcom-caf/bt)
 $(call set-device-specific-path,DATA_IPA_CFG_MGR,data-ipa-cfg-mgr,$(QC_OPEN_PATH)/data-ipa-cfg-mgr)
-$(call set-device-specific-path,DATASERVICES,dataservices,$(QC_OPEN_PATH)/commonsys/dataservices)
+$(call set-device-specific-path,DATASERVICES,dataservices,$(QC_OPEN_PATH)/dataservices)
 $(call set-device-specific-path,VR,vr,hardware/qcom-caf/vr)
 $(call set-device-specific-path,WLAN,wlan,hardware/qcom-caf/wlan)
 
