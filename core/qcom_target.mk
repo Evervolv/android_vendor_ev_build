@@ -17,9 +17,12 @@ ifeq ($(call is-board-platform-in-list, $(QCOM_BOARD_PLATFORMS)),true)
 $(call set-device-specific-path,AUDIO,audio,hardware/qcom-caf/$(QCOM_HARDWARE_VARIANT)/audio)
 $(call set-device-specific-path,DISPLAY,display,hardware/qcom-caf/$(QCOM_HARDWARE_VARIANT)/display)
 $(call set-device-specific-path,MEDIA,media,hardware/qcom-caf/$(QCOM_HARDWARE_VARIANT)/media)
-
 $(call set-device-specific-path,BT_VENDOR,bt-vendor,hardware/qcom-caf/bt)
+ifneq ($(filter $(LEGACY_UM_PLATFORMS),$(TARGET_BOARD_PLATFORM)),)
+$(call set-device-specific-path,DATA_IPA_CFG_MGR,data-ipa-cfg-mgr,$(QC_OPEN_PATH)/data-ipa-cfg-mgr-legacy-um)
+else
 $(call set-device-specific-path,DATA_IPA_CFG_MGR,data-ipa-cfg-mgr,$(QC_OPEN_PATH)/data-ipa-cfg-mgr)
+endif
 $(call set-device-specific-path,DATASERVICES,dataservices,$(QC_OPEN_PATH)/dataservices)
 $(call set-device-specific-path,VR,vr,hardware/qcom-caf/vr)
 $(call set-device-specific-path,WLAN,wlan,hardware/qcom-caf/wlan)
