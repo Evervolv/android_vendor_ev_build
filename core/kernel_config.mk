@@ -26,7 +26,7 @@
 #                                                      aarch64-linux-android- for arm64
 #                                                      x86_64-linux-android- for x86
 #
-#   TARGET_KERNEL_LLVM_BINUTILS        = Use LLVM's substitutes for GNU binutils
+#   TARGET_KERNEL_LLVM_BINUTILS        = Use LLVM's substitutes for GNU binutils, defaults to false
 #
 #   TARGET_KERNEL_CLANG_VERSION        = Clang prebuilts version, optional
 #
@@ -119,22 +119,6 @@ ifneq ($(USE_CCACHE),)
     endif
 endif
 
-# LLVM
-TARGET_KERNEL_CLANG_COMPILE ?= true
-ifneq ($(filter 5.10 5.15, $(TARGET_KERNEL_VERSION)),)
-TARGET_KERNEL_LLVM_BINUTILS := true
-endif
-TARGET_KERNEL_LLVM_BINUTILS ?= false
-ifneq ($(TARGET_KERNEL_LLVM_BINUTILS),true)
-TARGET_KERNEL_CLANG_VERSION ?= r416183b
-else
-TARGET_KERNEL_CLANG_VERSION ?= r450784d
-endif
-ifeq ($(TARGET_KERNEL_CLANG_VERSION),r416183b)
-TARGET_KERNEL_CLANG_PATH := $(BUILD_TOP)/prebuilts/evervolv-tools/$(HOST_PREBUILT_TAG)/clang-$(TARGET_KERNEL_CLANG_VERSION)
-endif
-TARGET_KERNEL_CLANG_PATH ?= $(BUILD_TOP)/prebuilts/clang/host/$(HOST_PREBUILT_TAG)/clang-$(TARGET_KERNEL_CLANG_VERSION)
-
 # GCC
 GCC_PREBUILTS := $(BUILD_TOP)/prebuilts/gcc/$(HOST_PREBUILT_TAG)
 
@@ -158,6 +142,23 @@ KERNEL_CROSS_COMPILE := CROSS_COMPILE="$(KERNEL_TOOLCHAIN_PATH)"
 ifeq ($(KERNEL_ARCH),arm64)
    KERNEL_CROSS_COMPILE += CROSS_COMPILE_ARM32="$(KERNEL_TOOLCHAIN_arm)/$(KERNEL_TOOLCHAIN_PREFIX_arm)"
    KERNEL_CROSS_COMPILE += CROSS_COMPILE_COMPAT="$(KERNEL_TOOLCHAIN_arm)/$(KERNEL_TOOLCHAIN_PREFIX_arm)"
+endif
+
+# LLVM
+ifneq ($(filter 5.10 5.15, $(TARGET_KERNEL_VERSION)),)
+TARGET_KERNEL_CLANG_VERSION ?= r450784d
+else
+TARGET_KERNEL_CLANG_VERSION ?= r416183b
+endif
+
+ifneq ($(wildcard $(BUILD_TOP)/prebuilts/evervolv-tools/$(HOST_PREBUILT_TAG)/clang-$(TARGET_KERNEL_CLANG_VERSION)/bin/clang),)
+TARGET_KERNEL_CLANG_PATH ?= $(BUILD_TOP)/prebuilts/evervolv-tools/$(HOST_PREBUILT_TAG)/clang-$(TARGET_KERNEL_CLANG_VERSION)
+else
+TARGET_KERNEL_CLANG_PATH ?= $(BUILD_TOP)/prebuilts/clang/host/$(HOST_PREBUILT_TAG)/clang-$(TARGET_KERNEL_CLANG_VERSION)
+endif
+
+ifneq ($(filter 5.10 5.15, $(TARGET_KERNEL_VERSION)),)
+TARGET_KERNEL_LLVM_BINUTILS := true
 endif
 
 ifeq ($(KERNEL_ARCH),arm64)
@@ -219,7 +220,7 @@ else
 endif
 
 # Use LLVM's substitutes for GNU binutils if compatible kernel version.
-ifneq ($(TARGET_KERNEL_LLVM_BINUTILS),false)
+ifeq ($(TARGET_KERNEL_LLVM_BINUTILS),true)
     KERNEL_MAKE_FLAGS += LLVM=1 LLVM_IAS=1
     KERNEL_MAKE_FLAGS += AR=$(TARGET_KERNEL_CLANG_PATH)/bin/llvm-ar
     KERNEL_MAKE_FLAGS += LD=$(TARGET_KERNEL_CLANG_PATH)/bin/ld.lld
