@@ -39,6 +39,7 @@ SOONG_CONFIG_evervolvGlobalVars += \
 
 SOONG_CONFIG_NAMESPACES += evervolvQcomVars
 SOONG_CONFIG_evervolvQcomVars += \
+    gralloc_handle_has_reserved_size \
     supports_audio_accessory \
     supports_debug_accessory \
     uses_pre_uplink_features_netmgrd \
@@ -52,6 +53,7 @@ endif
 
 # Set default values
 TARGET_DISABLE_POSTRENDER_CLEANUP ?= false
+TARGET_GRALLOC_HANDLE_HAS_RESERVED_SIZE ?= false
 TARGET_HAS_LEGACY_CAMERA_HAL1 ?= false
 TARGET_HAS_MEMFD_BACKPORT ?= false
 TARGET_KEYMASTER_WAIT_FOR_QSEE ?= false
@@ -64,6 +66,7 @@ TARGET_QTI_USB_SUPPORTS_DEBUG_ACCESSORY ?= false
 SOONG_CONFIG_evervolvGlobalVars_disable_postrender_cleanup := $(TARGET_DISABLE_POSTRENDER_CLEANUP)
 SOONG_CONFIG_evervolvGlobalVars_has_legacy_camera_hal1 := $(TARGET_HAS_LEGACY_CAMERA_HAL1)
 SOONG_CONFIG_evervolvGlobalVars_has_memfd_backport := $(TARGET_HAS_MEMFD_BACKPORT)
+SOONG_CONFIG_evervolvQcomVars_gralloc_handle_has_reserved_size := $(TARGET_GRALLOC_HANDLE_HAS_RESERVED_SIZE)
 SOONG_CONFIG_evervolvQcomVars_supports_audio_accessory := $(TARGET_QTI_USB_SUPPORTS_AUDIO_ACCESSORY)
 SOONG_CONFIG_evervolvQcomVars_supports_debug_accessory := $(TARGET_QTI_USB_SUPPORTS_DEBUG_ACCESSORY)
 SOONG_CONFIG_evervolvQcomVars_uses_pre_uplink_features_netmgrd := $(TARGET_USES_PRE_UPLINK_FEATURES_NETMGRD)
