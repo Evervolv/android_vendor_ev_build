@@ -241,6 +241,8 @@ endif
 # Add back threads, ninja cuts this to $(nproc)/2
 KERNEL_MAKE_FLAGS += -j$(shell $(EXTRA_TOOLS)/$(HOST_PREBUILT_TAG)/bin/nproc --all)
 
+ifeq ($(TARGET_KERNEL_LEGACY_COMPILE),true)
+
 ifeq ($(HOST_OS),darwin)
   KERNEL_MAKE_FLAGS += HOSTCFLAGS="-I$(BUILD_TOP)/external/elfutils/libelf -I/usr/local/opt/openssl/include" HOSTLDFLAGS="-L/usr/local/opt/openssl/lib -fuse-ld=lld"
 else
@@ -248,6 +250,13 @@ else
   ifneq ($(TARGET_KERNEL_EXCLUDE_HOST_HEADERS),true)
     KERNEL_MAKE_FLAGS += CPATH="/usr/include:/usr/include/x86_64-linux-gnu"
   endif
+endif
+
+else
+
+KERNEL_MAKE_FLAGS += HOSTCFLAGS="--sysroot=$(BUILD_TOP)/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.17-4.8/sysroot -I$(BUILD_TOP)/prebuilts/kernel-build-tools/linux-x86/include"
+KERNEL_MAKE_FLAGS += HOSTLDFLAGS="--sysroot=$(BUILD_TOP)/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.17-4.8/sysroot -Wl,-rpath,$(BUILD_TOP)/prebuilts/kernel-build-tools/linux-x86/lib64 -L $(BUILD_TOP)/prebuilts/kernel-build-tools/linux-x86/lib64 -fuse-ld=lld --rtlib=compiler-rt"
+
 endif
 
 # Use LLVM's substitutes for GNU binutils if compatible kernel version.
