@@ -28,6 +28,10 @@
 #
 #   TARGET_KERNEL_LLVM_BINUTILS        = Use LLVM's substitutes for GNU binutils, defaults to false
 #
+#   TARGET_KERNEL_LEGACY_COMPILE       = Use legacy options for compilation
+#                                          enabled defaults to r416183b for LLVM, GCC available
+#                                          disabled defaults to AOSP default (r450784d) for LLVM, GCC unavailable
+#
 #   TARGET_KERNEL_CLANG_VERSION        = Clang prebuilts version, optional
 #
 #   TARGET_KERNEL_CLANG_PATH           = Clang prebuilts path, optional
@@ -119,6 +123,17 @@ ifneq ($(USE_CCACHE),)
     endif
 endif
 
+# Compilation tools
+ifneq ($(filter 5.10 5.15, $(TARGET_KERNEL_VERSION)),)
+    TARGET_KERNEL_LEGACY_COMPILE := false
+endif
+TARGET_KERNEL_LEGACY_COMPILE ?= true
+
+
+KERNEL_CROSS_COMPILE := 
+
+ifeq ($(TARGET_KERNEL_LEGACY_COMPILE),true)
+
 # GCC
 GCC_PREBUILTS := $(BUILD_TOP)/prebuilts/gcc/$(HOST_PREBUILT_TAG)
 
@@ -136,12 +151,13 @@ KERNEL_TOOLCHAIN ?= $(KERNEL_TOOLCHAIN_$(KERNEL_ARCH))
 KERNEL_TOOLCHAIN_PREFIX ?= $(KERNEL_TOOLCHAIN_PREFIX_$(KERNEL_ARCH))
 KERNEL_TOOLCHAIN_PATH ?= $(KERNEL_TOOLCHAIN)/$(KERNEL_TOOLCHAIN_PREFIX)
 
-KERNEL_CROSS_COMPILE := CROSS_COMPILE="$(KERNEL_TOOLCHAIN_PATH)"
-
+KERNEL_CROSS_COMPILE += CROSS_COMPILE="$(KERNEL_TOOLCHAIN_PATH)"
 # Needed for CONFIG_COMPAT_VDSO, safe to set for all arm64 builds
 ifeq ($(KERNEL_ARCH),arm64)
    KERNEL_CROSS_COMPILE += CROSS_COMPILE_ARM32="$(KERNEL_TOOLCHAIN_arm)/$(KERNEL_TOOLCHAIN_PREFIX_arm)"
    KERNEL_CROSS_COMPILE += CROSS_COMPILE_COMPAT="$(KERNEL_TOOLCHAIN_arm)/$(KERNEL_TOOLCHAIN_PREFIX_arm)"
+endif
+
 endif
 
 # LLVM
@@ -157,9 +173,7 @@ else
 TARGET_KERNEL_CLANG_PATH ?= $(BUILD_TOP)/prebuilts/clang/host/$(HOST_PREBUILT_TAG)/clang-$(TARGET_KERNEL_CLANG_VERSION)
 endif
 
-ifneq ($(filter 5.10 5.15, $(TARGET_KERNEL_VERSION)),)
-TARGET_KERNEL_LLVM_BINUTILS := true
-endif
+ifeq ($(TARGET_KERNEL_LEGACY_COMPILE),true)
 
 ifeq ($(KERNEL_ARCH),arm64)
     KERNEL_CLANG_TRIPLE ?= CLANG_TRIPLE=aarch64-linux-gnu-
@@ -169,17 +183,21 @@ else ifeq ($(KERNEL_ARCH),x86)
     KERNEL_CLANG_TRIPLE ?= CLANG_TRIPLE=x86_64-linux-gnu-
 endif
 
+KERNEL_CROSS_COMPILE += $(KERNEL_CLANG_TRIPLE)
+
+endif
+
 ifeq ($(KERNEL_CC),)
     KERNEL_CC := CC="$(CCACHE_BIN) clang"
 endif
 
-KERNEL_CROSS_COMPILE += $(KERNEL_CLANG_TRIPLE) $(KERNEL_CC)
+KERNEL_CROSS_COMPILE += $(KERNEL_CC)
 
 # Set paths for prebuilt tools
 SYSTEM_TOOLS := $(BUILD_TOP)/prebuilts/build-tools
 EXTRA_TOOLS := $(BUILD_TOP)/prebuilts/evervolv-tools
 
-KERNEL_TOOLS := $(EXTRA_TOOLS)/$(HOST_PREBUILT_TAG)/bin:$(KERNEL_TOOLCHAIN_$(KERNEL_ARCH)):$(TARGET_KERNEL_CLANG_PATH)/bin
+KERNEL_TOOLS := $(EXTRA_TOOLS)/$(HOST_PREBUILT_TAG)/bin:$(TARGET_KERNEL_CLANG_PATH)/bin
 KERNEL_LD_LIBRARY := $(EXTRA_TOOLS)/$(HOST_PREBUILT_TAG)/lib:$(TARGET_KERNEL_CLANG_PATH)/lib64
 
 TOOLS_PATH_OVERRIDE := \
@@ -188,9 +206,16 @@ TOOLS_PATH_OVERRIDE := \
     PATH=$(KERNEL_TOOLS):$$PATH \
     LD_LIBRARY_PATH=$(KERNEL_LD_LIBRARY):$$LD_LIBRARY_PATH
 
+ifeq ($(TARGET_KERNEL_LEGACY_COMPILE),true)
+
+TOOLS_PATH_OVERRIDE += \
+    PATH=$(KERNEL_TOOLCHAIN_$(KERNEL_ARCH)):$$PATH
+
 ifeq ($(KERNEL_ARCH),arm64)
 TOOLS_PATH_OVERRIDE += \
     PATH=$(KERNEL_TOOLCHAIN_arm):$$PATH
+endif
+
 endif
 
 # Set use the full path to the make command
@@ -201,11 +226,17 @@ KERNEL_MAKE_FLAGS :=
 
 # Since Linux 4.16, flex and bison are required
 KERNEL_MAKE_FLAGS += \
-    HOSTCC=$(TARGET_KERNEL_CLANG_PATH)/bin/clang \
-    HOSTCXX=$(TARGET_KERNEL_CLANG_PATH)/bin/clang++ \
     LEX=$(SYSTEM_TOOLS)/$(HOST_PREBUILT_TAG)/bin/flex \
     YACC=$(SYSTEM_TOOLS)/$(HOST_PREBUILT_TAG)/bin/bison \
     M4=$(SYSTEM_TOOLS)/$(HOST_PREBUILT_TAG)/bin/m4
+
+ifeq ($(TARGET_KERNEL_LEGACY_COMPILE),true)
+
+KERNEL_MAKE_FLAGS += \
+    HOSTCC=$(TARGET_KERNEL_CLANG_PATH)/bin/clang \
+    HOSTCXX=$(TARGET_KERNEL_CLANG_PATH)/bin/clang++
+
+endif
 
 # Add back threads, ninja cuts this to $(nproc)/2
 KERNEL_MAKE_FLAGS += -j$(shell $(EXTRA_TOOLS)/$(HOST_PREBUILT_TAG)/bin/nproc --all)
@@ -220,8 +251,15 @@ else
 endif
 
 # Use LLVM's substitutes for GNU binutils if compatible kernel version.
+ifeq ($(TARGET_KERNEL_LEGACY_COMPILE),false)
+TARGET_KERNEL_LLVM_BINUTILS := true
+endif
+TARGET_KERNEL_LLVM_BINUTILS ?= false
+
 ifeq ($(TARGET_KERNEL_LLVM_BINUTILS),true)
     KERNEL_MAKE_FLAGS += LLVM=1 LLVM_IAS=1
-    KERNEL_MAKE_FLAGS += AR=$(TARGET_KERNEL_CLANG_PATH)/bin/llvm-ar
-    KERNEL_MAKE_FLAGS += LD=$(TARGET_KERNEL_CLANG_PATH)/bin/ld.lld
+    ifeq ($(TARGET_KERNEL_LEGACY_COMPILE),true)
+        KERNEL_MAKE_FLAGS += AR=$(TARGET_KERNEL_CLANG_PATH)/bin/llvm-ar
+        KERNEL_MAKE_FLAGS += LD=$(TARGET_KERNEL_CLANG_PATH)/bin/ld.lld
+    endif
 endif
