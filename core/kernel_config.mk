@@ -124,11 +124,10 @@ ifneq ($(USE_CCACHE),)
 endif
 
 # Compilation tools
-ifneq ($(filter 5.10 5.15, $(TARGET_KERNEL_VERSION)),)
-    TARGET_KERNEL_LEGACY_COMPILE := false
+ifneq ($(filter 3.18 4.4 4.9 4.14 4.19 5.4, $(TARGET_KERNEL_VERSION)),)
+    TARGET_KERNEL_LEGACY_COMPILE := true
 endif
-TARGET_KERNEL_LEGACY_COMPILE ?= true
-
+TARGET_KERNEL_LEGACY_COMPILE ?= false
 
 KERNEL_CROSS_COMPILE := 
 
@@ -161,11 +160,10 @@ endif
 endif
 
 # LLVM
-ifneq ($(filter 5.10 5.15, $(TARGET_KERNEL_VERSION)),)
-TARGET_KERNEL_CLANG_VERSION ?= r450784d
-else
-TARGET_KERNEL_CLANG_VERSION ?= r416183b
+ifeq ($(TARGET_KERNEL_LEGACY_COMPILE),true)
+TARGET_KERNEL_CLANG_VERSION := r416183b
 endif
+TARGET_KERNEL_CLANG_VERSION ?= r450784d
 
 ifneq ($(wildcard $(BUILD_TOP)/prebuilts/evervolv-tools/$(HOST_PREBUILT_TAG)/clang-$(TARGET_KERNEL_CLANG_VERSION)/bin/clang),)
 TARGET_KERNEL_CLANG_PATH ?= $(BUILD_TOP)/prebuilts/evervolv-tools/$(HOST_PREBUILT_TAG)/clang-$(TARGET_KERNEL_CLANG_VERSION)
@@ -261,13 +259,21 @@ endif
 
 # Use LLVM's substitutes for GNU binutils if compatible kernel version.
 ifeq ($(TARGET_KERNEL_LEGACY_COMPILE),false)
-TARGET_KERNEL_LLVM_BINUTILS := true
+    TARGET_KERNEL_LLVM_BINUTILS := true
+else
+    ifneq ($(filter 4.14 4.19 5.4, $(TARGET_KERNEL_VERSION)),)
+        TARGET_KERNEL_LLVM_BINUTILS := true
+    endif
 endif
 TARGET_KERNEL_LLVM_BINUTILS ?= false
 
 ifeq ($(TARGET_KERNEL_LLVM_BINUTILS),true)
     KERNEL_MAKE_FLAGS += LLVM=1 LLVM_IAS=1
     ifeq ($(TARGET_KERNEL_LEGACY_COMPILE),true)
+        ifneq (,$(findstring LLVM_IAS=0,$(TARGET_KERNEL_ADDITIONAL_FLAGS)))
+            KERNEL_MAKE_FLAGS := $(patsubst LLVM_IAS=1,LLVM_IAS=0,$(KERNEL_MAKE_FLAGS))
+            TARGET_KERNEL_ADDITIONAL_FLAGS := $(patsubst LLVM_IAS=0,,$(TARGET_KERNEL_ADDITIONAL_FLAGS))
+        endif
         KERNEL_MAKE_FLAGS += AR=$(TARGET_KERNEL_CLANG_PATH)/bin/llvm-ar
         KERNEL_MAKE_FLAGS += LD=$(TARGET_KERNEL_CLANG_PATH)/bin/ld.lld
     endif
