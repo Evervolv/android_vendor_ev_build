@@ -316,3 +316,20 @@ stagefright_qcom_legacy {
         },
     },
 }
+
+soong_config_module_type {
+    name: "libhidl_legacy_contructor_map",
+    module_type: "cc_defaults",
+    config_namespace: "evervolvGlobalVars",
+    bool_variables: ["uses_legacy_contructor_map"],
+    properties: ["cflags"],
+}
+
+libhidl_legacy_contructor_map {
+    name: "libhidl_legacy_contructor_defaults",
+    soong_config_variables: {
+        uses_legacy_contructor_map: {
+            cflags: ["-DLEGACY_CONTRUCTOR_MAP"],
+        },
+    },
+}
