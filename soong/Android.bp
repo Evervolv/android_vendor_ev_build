@@ -163,3 +163,139 @@ librmnetctl_pre_uplink {
         },
     },
 }
+
+soong_config_module_type {
+    name: "disable_postrender_cleanup",
+    module_type: "cc_defaults",
+    config_namespace: "evervolvGlobalVars",
+    bool_variables: ["disable_postrender_cleanup"],
+    properties: ["cppflags"],
+}
+
+disable_postrender_cleanup {
+    name: "disable_postrender_cleanup_defaults",
+    soong_config_variables: {
+        disable_postrender_cleanup: {
+            cppflags: ["-DDISABLE_POSTRENDER_CLEANUP"],
+        },
+    },
+}
+
+soong_config_module_type {
+    name: "target_process_sdk_version_overrides",
+    module_type: "cc_defaults",
+    config_namespace: "evervolvGlobalVars",
+    value_variables: ["target_process_sdk_version_override"],
+    properties: ["cppflags"],
+}
+
+target_process_sdk_version_overrides {
+    name: "process_sdk_version_overrides_defaults",
+    soong_config_variables: {
+        target_process_sdk_version_override: {
+            cppflags: ["-DSDK_VERSION_OVERRIDES=\"%s\""],
+        },
+    },
+}
+
+soong_config_module_type {
+    name: "target_shim_libs",
+    module_type: "cc_defaults",
+    config_namespace: "evervolvGlobalVars",
+    value_variables: ["target_ld_shim_libs"],
+    properties: ["cppflags"],
+}
+
+target_shim_libs {
+    name: "shim_libs_defaults",
+    soong_config_variables: {
+        target_ld_shim_libs: {
+            cppflags: ["-DLD_SHIM_LIBS=\"%s\""],
+        },
+    },
+}
+
+soong_config_module_type {
+    name: "no_cameraserver",
+    module_type: "cc_defaults",
+    config_namespace: "evervolvGlobalVars",
+    bool_variables: ["has_legacy_camera_hal1"],
+    properties: [
+        "cppflags",
+    ],
+}
+
+no_cameraserver {
+    name: "no_cameraserver_defaults",
+    soong_config_variables: {
+        has_legacy_camera_hal1: {
+            cppflags: [
+                "-DNO_CAMERA_SERVER",
+                "-Wno-overloaded-virtual",
+            ],
+        },
+    },
+}
+
+soong_config_module_type {
+    name: "camera_in_mediaserver",
+    module_type: "cc_defaults",
+    config_namespace: "evervolvGlobalVars",
+    bool_variables: ["has_legacy_camera_hal1"],
+    properties: [
+        "overrides",
+        "shared_libs",
+    ],
+}
+
+camera_in_mediaserver {
+    name: "camera_in_mediaserver_defaults",
+    defaults: ["no_cameraserver_defaults"],
+    soong_config_variables: {
+        has_legacy_camera_hal1: {
+            overrides: ["cameraserver"],
+            shared_libs: [
+                "android.hardware.camera.common@1.0",
+                "android.hardware.camera.device@3.4",
+                "android.hardware.camera.provider@2.6",
+                "android.hardware.camera.provider@2.7",
+                "libcameraservice",
+                "libgui",
+            ],
+        },
+    },
+}
+
+soong_config_module_type {
+    name: "has_memfd_backport",
+    module_type: "cc_defaults",
+    config_namespace: "evervolvGlobalVars",
+    bool_variables: ["has_memfd_backport"],
+    properties: ["cppflags"],
+}
+
+has_memfd_backport {
+    name: "has_memfd_backport_defaults",
+    soong_config_variables: {
+        has_memfd_backport: {
+            cppflags: ["-DHAS_MEMFD_BACKPORT"],
+        },
+    },
+}
+
+soong_config_module_type {
+    name: "stagefright_qcom_legacy",
+    module_type: "cc_defaults",
+    config_namespace: "evervolvQcomVars",
+    bool_variables: ["uses_qcom_bsp_legacy"],
+    properties: ["cppflags"],
+}
+
+stagefright_qcom_legacy {
+    name: "stagefright_qcom_legacy_defaults",
+    soong_config_variables: {
+        uses_qcom_bsp_legacy: {
+            cppflags: ["-DQCOM_BSP_LEGACY"],
+        },
+    },
+}
