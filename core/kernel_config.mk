@@ -77,14 +77,14 @@ BUILD_TOP := $(abspath .)
 OUT_DIR_PREFIX := $(shell echo $(OUT_DIR) | sed -e 's|/target/.*$$||g')
 KERNEL_BUILD_OUT_PREFIX :=
 ifeq ($(OUT_DIR_PREFIX),out)
-KERNEL_BUILD_OUT_PREFIX := $(BUILD_TOP)/
+    KERNEL_BUILD_OUT_PREFIX := $(BUILD_TOP)/
 endif
 
 # Set the default kernel source
 TARGET_AUTO_KDIR := $(shell echo $(TARGET_DEVICE_DIR) | sed -e 's/^device/kernel/g')
 TARGET_KERNEL_SOURCE ?= $(TARGET_AUTO_KDIR)
 ifneq ($(TARGET_PREBUILT_KERNEL),)
-TARGET_KERNEL_SOURCE :=
+    TARGET_KERNEL_SOURCE :=
 endif
 
 # Kernel version
@@ -96,9 +96,9 @@ TARGET_KERNEL_VERSION ?= $(shell echo $(KERNEL_VERSION)"."$(KERNEL_PATCHLEVEL))
 # Architecture
 TARGET_KERNEL_ARCH := $(strip $(TARGET_KERNEL_ARCH))
 ifeq ($(TARGET_KERNEL_ARCH),)
-KERNEL_ARCH := $(TARGET_ARCH)
+    KERNEL_ARCH := $(TARGET_ARCH)
 else
-KERNEL_ARCH := $(TARGET_KERNEL_ARCH)
+    KERNEL_ARCH := $(TARGET_KERNEL_ARCH)
 endif
 
 # Device tree
@@ -106,9 +106,9 @@ TARGET_KERNEL_DTB ?= dtbs
 
 # Device tree overlay
 ifeq ($(filter true, $(TARGET_NEEDS_DTBOIMAGE) $(BOARD_KERNEL_SEPARATED_DTBO)),true)
-TARGET_KERNEL_DTBO_PREFIX ?=
-TARGET_KERNEL_DTBO ?= dtbo.img
-BOARD_PREBUILT_DTBOIMAGE ?= $(TARGET_OUT_INTERMEDIATES)/DTBO_OBJ/arch/$(KERNEL_ARCH)/boot/$(TARGET_KERNEL_DTBO_PREFIX)$(TARGET_KERNEL_DTBO)
+    TARGET_KERNEL_DTBO_PREFIX ?=
+    TARGET_KERNEL_DTBO ?= dtbo.img
+    BOARD_PREBUILT_DTBOIMAGE ?= $(TARGET_OUT_INTERMEDIATES)/DTBO_OBJ/arch/$(KERNEL_ARCH)/boot/$(TARGET_KERNEL_DTBO_PREFIX)$(TARGET_KERNEL_DTBO)
 endif
 
 # External modules
@@ -132,57 +132,52 @@ TARGET_KERNEL_LEGACY_COMPILE ?= false
 KERNEL_CROSS_COMPILE := 
 
 ifeq ($(TARGET_KERNEL_LEGACY_COMPILE),true)
+    # GCC
+    GCC_PREBUILTS := $(BUILD_TOP)/prebuilts/gcc/$(HOST_PREBUILT_TAG)
 
-# GCC
-GCC_PREBUILTS := $(BUILD_TOP)/prebuilts/gcc/$(HOST_PREBUILT_TAG)
+    # arm64 toolchain
+    KERNEL_TOOLCHAIN_arm64 := $(GCC_PREBUILTS)/aarch64/aarch64-linux-android-4.9/bin
+    KERNEL_TOOLCHAIN_PREFIX_arm64 := aarch64-linux-android-
+    # arm toolchain
+    KERNEL_TOOLCHAIN_arm := $(GCC_PREBUILTS)/arm/arm-linux-androideabi-4.9/bin
+    KERNEL_TOOLCHAIN_PREFIX_arm := arm-linux-androidkernel-
+    # x86 toolchain
+    KERNEL_TOOLCHAIN_x86 := $(GCC_PREBUILTS)/x86/x86_64-linux-android-4.9/bin
+    KERNEL_TOOLCHAIN_PREFIX_x86 := x86_64-linux-android-
 
-# arm64 toolchain
-KERNEL_TOOLCHAIN_arm64 := $(GCC_PREBUILTS)/aarch64/aarch64-linux-android-4.9/bin
-KERNEL_TOOLCHAIN_PREFIX_arm64 := aarch64-linux-android-
-# arm toolchain
-KERNEL_TOOLCHAIN_arm := $(GCC_PREBUILTS)/arm/arm-linux-androideabi-4.9/bin
-KERNEL_TOOLCHAIN_PREFIX_arm := arm-linux-androidkernel-
-# x86 toolchain
-KERNEL_TOOLCHAIN_x86 := $(GCC_PREBUILTS)/x86/x86_64-linux-android-4.9/bin
-KERNEL_TOOLCHAIN_PREFIX_x86 := x86_64-linux-android-
+    KERNEL_TOOLCHAIN ?= $(KERNEL_TOOLCHAIN_$(KERNEL_ARCH))
+    KERNEL_TOOLCHAIN_PREFIX ?= $(KERNEL_TOOLCHAIN_PREFIX_$(KERNEL_ARCH))
+    KERNEL_TOOLCHAIN_PATH ?= $(KERNEL_TOOLCHAIN)/$(KERNEL_TOOLCHAIN_PREFIX)
 
-KERNEL_TOOLCHAIN ?= $(KERNEL_TOOLCHAIN_$(KERNEL_ARCH))
-KERNEL_TOOLCHAIN_PREFIX ?= $(KERNEL_TOOLCHAIN_PREFIX_$(KERNEL_ARCH))
-KERNEL_TOOLCHAIN_PATH ?= $(KERNEL_TOOLCHAIN)/$(KERNEL_TOOLCHAIN_PREFIX)
-
-KERNEL_CROSS_COMPILE += CROSS_COMPILE="$(KERNEL_TOOLCHAIN_PATH)"
-# Needed for CONFIG_COMPAT_VDSO, safe to set for all arm64 builds
-ifeq ($(KERNEL_ARCH),arm64)
-   KERNEL_CROSS_COMPILE += CROSS_COMPILE_ARM32="$(KERNEL_TOOLCHAIN_arm)/$(KERNEL_TOOLCHAIN_PREFIX_arm)"
-   KERNEL_CROSS_COMPILE += CROSS_COMPILE_COMPAT="$(KERNEL_TOOLCHAIN_arm)/$(KERNEL_TOOLCHAIN_PREFIX_arm)"
-endif
-
+    KERNEL_CROSS_COMPILE += CROSS_COMPILE="$(KERNEL_TOOLCHAIN_PATH)"
+    # Needed for CONFIG_COMPAT_VDSO, safe to set for all arm64 builds
+    ifeq ($(KERNEL_ARCH),arm64)
+        KERNEL_CROSS_COMPILE += CROSS_COMPILE_ARM32="$(KERNEL_TOOLCHAIN_arm)/$(KERNEL_TOOLCHAIN_PREFIX_arm)"
+        KERNEL_CROSS_COMPILE += CROSS_COMPILE_COMPAT="$(KERNEL_TOOLCHAIN_arm)/$(KERNEL_TOOLCHAIN_PREFIX_arm)"
+    endif
 endif
 
 # LLVM
 ifeq ($(TARGET_KERNEL_LEGACY_COMPILE),true)
-TARGET_KERNEL_CLANG_VERSION := r416183b
+    TARGET_KERNEL_CLANG_VERSION := r416183b
 endif
 TARGET_KERNEL_CLANG_VERSION ?= r450784d
 
 ifneq ($(wildcard $(BUILD_TOP)/prebuilts/evervolv-tools/$(HOST_PREBUILT_TAG)/clang-$(TARGET_KERNEL_CLANG_VERSION)/bin/clang),)
-TARGET_KERNEL_CLANG_PATH ?= $(BUILD_TOP)/prebuilts/evervolv-tools/$(HOST_PREBUILT_TAG)/clang-$(TARGET_KERNEL_CLANG_VERSION)
+    TARGET_KERNEL_CLANG_PATH ?= $(BUILD_TOP)/prebuilts/evervolv-tools/$(HOST_PREBUILT_TAG)/clang-$(TARGET_KERNEL_CLANG_VERSION)
 else
-TARGET_KERNEL_CLANG_PATH ?= $(BUILD_TOP)/prebuilts/clang/host/$(HOST_PREBUILT_TAG)/clang-$(TARGET_KERNEL_CLANG_VERSION)
+    TARGET_KERNEL_CLANG_PATH ?= $(BUILD_TOP)/prebuilts/clang/host/$(HOST_PREBUILT_TAG)/clang-$(TARGET_KERNEL_CLANG_VERSION)
 endif
 
 ifeq ($(TARGET_KERNEL_LEGACY_COMPILE),true)
-
-ifeq ($(KERNEL_ARCH),arm64)
-    KERNEL_CLANG_TRIPLE ?= CLANG_TRIPLE=aarch64-linux-gnu-
-else ifeq ($(KERNEL_ARCH),arm)
-    KERNEL_CLANG_TRIPLE ?= CLANG_TRIPLE=arm-linux-gnu-
-else ifeq ($(KERNEL_ARCH),x86)
-    KERNEL_CLANG_TRIPLE ?= CLANG_TRIPLE=x86_64-linux-gnu-
-endif
-
-KERNEL_CROSS_COMPILE += $(KERNEL_CLANG_TRIPLE)
-
+    ifeq ($(KERNEL_ARCH),arm64)
+        KERNEL_CLANG_TRIPLE ?= CLANG_TRIPLE=aarch64-linux-gnu-
+    else ifeq ($(KERNEL_ARCH),arm)
+        KERNEL_CLANG_TRIPLE ?= CLANG_TRIPLE=arm-linux-gnu-
+    else ifeq ($(KERNEL_ARCH),x86)
+        KERNEL_CLANG_TRIPLE ?= CLANG_TRIPLE=x86_64-linux-gnu-
+    endif
+    KERNEL_CROSS_COMPILE += $(KERNEL_CLANG_TRIPLE)
 endif
 
 ifeq ($(KERNEL_CC),)
@@ -205,15 +200,12 @@ TOOLS_PATH_OVERRIDE := \
     LD_LIBRARY_PATH=$(KERNEL_LD_LIBRARY):$$LD_LIBRARY_PATH
 
 ifeq ($(TARGET_KERNEL_LEGACY_COMPILE),true)
-
-TOOLS_PATH_OVERRIDE += \
-    PATH=$(KERNEL_TOOLCHAIN_$(KERNEL_ARCH)):$$PATH
-
-ifeq ($(KERNEL_ARCH),arm64)
-TOOLS_PATH_OVERRIDE += \
-    PATH=$(KERNEL_TOOLCHAIN_arm):$$PATH
-endif
-
+    TOOLS_PATH_OVERRIDE += \
+        PATH=$(KERNEL_TOOLCHAIN_$(KERNEL_ARCH)):$$PATH
+    ifeq ($(KERNEL_ARCH),arm64)
+        TOOLS_PATH_OVERRIDE += \
+            PATH=$(KERNEL_TOOLCHAIN_arm):$$PATH
+    endif
 endif
 
 # Set use the full path to the make command
@@ -229,32 +221,26 @@ KERNEL_MAKE_FLAGS += \
     M4=$(SYSTEM_TOOLS)/$(HOST_PREBUILT_TAG)/bin/m4
 
 ifeq ($(TARGET_KERNEL_LEGACY_COMPILE),true)
-
-KERNEL_MAKE_FLAGS += \
-    HOSTCC=$(TARGET_KERNEL_CLANG_PATH)/bin/clang \
-    HOSTCXX=$(TARGET_KERNEL_CLANG_PATH)/bin/clang++
-
+    KERNEL_MAKE_FLAGS += \
+        HOSTCC=$(TARGET_KERNEL_CLANG_PATH)/bin/clang \
+        HOSTCXX=$(TARGET_KERNEL_CLANG_PATH)/bin/clang++
 endif
 
 # Add back threads, ninja cuts this to $(nproc)/2
 KERNEL_MAKE_FLAGS += -j$(shell $(EXTRA_TOOLS)/$(HOST_PREBUILT_TAG)/bin/nproc --all)
 
 ifeq ($(TARGET_KERNEL_LEGACY_COMPILE),true)
-
-ifeq ($(HOST_OS),darwin)
-  KERNEL_MAKE_FLAGS += HOSTCFLAGS="-I$(BUILD_TOP)/external/elfutils/libelf -I/usr/local/opt/openssl/include" HOSTLDFLAGS="-L/usr/local/opt/openssl/lib -fuse-ld=lld"
+    ifeq ($(HOST_OS),darwin)
+        KERNEL_MAKE_FLAGS += HOSTCFLAGS="-I$(BUILD_TOP)/external/elfutils/libelf -I/usr/local/opt/openssl/include" HOSTLDFLAGS="-L/usr/local/opt/openssl/lib -fuse-ld=lld"
+    else
+        KERNEL_MAKE_FLAGS += HOSTLDFLAGS="-L/usr/lib/x86_64-linux-gnu -L/usr/lib64 -fuse-ld=lld"
+        ifneq ($(TARGET_KERNEL_EXCLUDE_HOST_HEADERS),true)
+            KERNEL_MAKE_FLAGS += CPATH="/usr/include:/usr/include/x86_64-linux-gnu"
+        endif
+    endif
 else
-  KERNEL_MAKE_FLAGS += HOSTLDFLAGS="-L/usr/lib/x86_64-linux-gnu -L/usr/lib64 -fuse-ld=lld"
-  ifneq ($(TARGET_KERNEL_EXCLUDE_HOST_HEADERS),true)
-    KERNEL_MAKE_FLAGS += CPATH="/usr/include:/usr/include/x86_64-linux-gnu"
-  endif
-endif
-
-else
-
-KERNEL_MAKE_FLAGS += HOSTCFLAGS="--sysroot=$(BUILD_TOP)/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.17-4.8/sysroot -I$(BUILD_TOP)/prebuilts/kernel-build-tools/linux-x86/include"
-KERNEL_MAKE_FLAGS += HOSTLDFLAGS="--sysroot=$(BUILD_TOP)/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.17-4.8/sysroot -Wl,-rpath,$(BUILD_TOP)/prebuilts/kernel-build-tools/linux-x86/lib64 -L $(BUILD_TOP)/prebuilts/kernel-build-tools/linux-x86/lib64 -fuse-ld=lld --rtlib=compiler-rt"
-
+    KERNEL_MAKE_FLAGS += HOSTCFLAGS="--sysroot=$(BUILD_TOP)/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.17-4.8/sysroot -I$(BUILD_TOP)/prebuilts/kernel-build-tools/linux-x86/include"
+    KERNEL_MAKE_FLAGS += HOSTLDFLAGS="--sysroot=$(BUILD_TOP)/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.17-4.8/sysroot -Wl,-rpath,$(BUILD_TOP)/prebuilts/kernel-build-tools/linux-x86/lib64 -L $(BUILD_TOP)/prebuilts/kernel-build-tools/linux-x86/lib64 -fuse-ld=lld --rtlib=compiler-rt"
 endif
 
 # Use LLVM's substitutes for GNU binutils if compatible kernel version.
