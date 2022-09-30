@@ -20,6 +20,13 @@ SOONG_CONFIG_qtidisplay_gralloc4 ?= false
 SOONG_CONFIG_qtidisplay_udfps ?= false
 SOONG_CONFIG_qtidisplay_default ?= true
 
+# UM platforms no longer need this set on O+
+ifneq ($(TARGET_USES_AOSP),true)
+    ifneq ($(filter $(B_FAMILY) $(B64_FAMILY) $(BR_FAMILY),$(TARGET_BOARD_PLATFORM)),)
+        TARGET_USES_QCOM_BSP := true
+    endif
+endif
+
 # Tell HALs that we're compiling an AOSP build with an in-line kernel
 TARGET_COMPILE_WITH_MSM_KERNEL := true
 
@@ -48,6 +55,11 @@ endif
 # Mark GRALLOC_USAGE_PRIVATE_WFD as valid gralloc bits
 TARGET_ADDITIONAL_GRALLOC_10_USAGE_BITS ?= 0
 
+# Mark GRALLOC_USAGE_HW_2D as valid gralloc bit on legacy platforms that support it
+ifneq ($(filter msm8952 $(A_FAMILY) $(B_FAMILY) $(B64_FAMILY) $(BR_FAMILY),$(TARGET_BOARD_PLATFORM)),)
+    TARGET_ADDITIONAL_GRALLOC_10_USAGE_BITS += | (1 << 10)
+endif
+
 # Mark GRALLOC_USAGE_EXTERNAL_DISP as valid gralloc bit
 TARGET_ADDITIONAL_GRALLOC_10_USAGE_BITS += | (1 << 13)
 
@@ -59,7 +71,15 @@ ifneq ($(filter $(UM_4_9_FAMILY) $(UM_4_14_FAMILY) $(UM_4_19_FAMILY) $(UM_5_4_FA
     TARGET_ADDITIONAL_GRALLOC_10_USAGE_BITS += | (1 << 27)
 endif
 
-ifneq ($(filter $(UM_3_18_FAMILY),$(TARGET_BOARD_PLATFORM)),)
+ifneq ($(filter $(A_FAMILY),$(TARGET_BOARD_PLATFORM)),)
+    QCOM_HARDWARE_VARIANT := msm8960
+else ifneq ($(filter $(B_FAMILY),$(TARGET_BOARD_PLATFORM)),)
+    QCOM_HARDWARE_VARIANT := msm8974
+else ifneq ($(filter $(B64_FAMILY),$(TARGET_BOARD_PLATFORM)),)
+    QCOM_HARDWARE_VARIANT := msm8994
+else ifneq ($(filter $(BR_FAMILY),$(TARGET_BOARD_PLATFORM)),)
+    QCOM_HARDWARE_VARIANT := msm8916
+else ifneq ($(filter $(UM_3_18_FAMILY),$(TARGET_BOARD_PLATFORM)),)
     QCOM_HARDWARE_VARIANT := msm8996
 else ifneq ($(filter $(UM_4_4_FAMILY),$(TARGET_BOARD_PLATFORM)),)
     QCOM_HARDWARE_VARIANT := msm8998
