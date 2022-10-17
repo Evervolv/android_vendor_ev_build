@@ -37,8 +37,13 @@ PRODUCT_SOONG_NAMESPACES += \
 # Add display-commonsys-intf to PRODUCT_SOONG_NAMESPACES for QSSI supported platforms
 ifneq ($(filter $(QSSI_SUPPORTED_PLATFORMS),$(TARGET_BOARD_PLATFORM)),)
 PRODUCT_SOONG_NAMESPACES += \
-    $(QC_OPEN_PATH)/commonsys-intf/display \
+    $(QC_OPEN_PATH)/commonsys-intf/display
+
+ifeq ($(filter $(UM_5_10_FAMILY),$(TARGET_BOARD_PLATFORM)),)
+PRODUCT_SOONG_NAMESPACES += \
     $(QC_OPEN_PATH)/commonsys/display
+endif
+
 endif
 
 PRODUCT_CFI_INCLUDE_PATHS += \
