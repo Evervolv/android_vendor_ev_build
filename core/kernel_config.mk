@@ -128,6 +128,15 @@ ifneq ($(filter 3.18 4.4 4.9 4.14 4.19 5.4, $(TARGET_KERNEL_VERSION)),)
 endif
 TARGET_KERNEL_NO_GCC ?= true
 
+ifeq ($(TARGET_KERNEL_NO_GCC),true)
+    TARGET_KERNEL_LLVM_BINUTILS := true
+else
+    ifneq ($(filter 4.14 4.19 5.4, $(TARGET_KERNEL_VERSION)),)
+        TARGET_KERNEL_LLVM_BINUTILS := true
+    endif
+endif
+TARGET_KERNEL_LLVM_BINUTILS ?= false
+
 KERNEL_CROSS_COMPILE := 
 
 ifneq ($(TARGET_KERNEL_NO_GCC),true)
@@ -208,22 +217,45 @@ ifneq ($(TARGET_KERNEL_NO_GCC),true)
 endif
 
 # Set use the full path to the make command
-KERNEL_MAKE_CMD := $(SYSTEM_TOOLS)/$(HOST_PREBUILT_TAG)/bin/make
+PREBUILT_TOOLS_PATH := $(SYSTEM_TOOLS)/$(HOST_PREBUILT_TAG)/bin
+KERNEL_MAKE_CMD := $(PREBUILT_TOOLS_PATH)/make
 
 # Clear this first to prevent accidental poisoning from env
-KERNEL_MAKE_FLAGS :=
+CORE_MAKE_FLAGS :=
 
 # Since Linux 4.16, flex and bison are required
-KERNEL_MAKE_FLAGS += \
+CORE_MAKE_FLAGS += \
     LEX=$(SYSTEM_TOOLS)/$(HOST_PREBUILT_TAG)/bin/flex \
     YACC=$(SYSTEM_TOOLS)/$(HOST_PREBUILT_TAG)/bin/bison \
     M4=$(SYSTEM_TOOLS)/$(HOST_PREBUILT_TAG)/bin/m4
 
+KERNEL_MAKE_FLAGS := $(CORE_MAKE_FLAGS)
+
+LEGACY_KERNEL_MAKE_FLAGS += \
+    HOSTCC=$(TARGET_KERNEL_CLANG_PATH)/bin/clang \
+    HOSTCXX=$(TARGET_KERNEL_CLANG_PATH)/bin/clang++
+
 ifneq ($(TARGET_KERNEL_NO_GCC),true)
-    KERNEL_MAKE_FLAGS += \
-        HOSTCC=$(TARGET_KERNEL_CLANG_PATH)/bin/clang \
-        HOSTCXX=$(TARGET_KERNEL_CLANG_PATH)/bin/clang++
+    KERNEL_MAKE_FLAGS += $(LEGACY_KERNEL_MAKE_FLAGS)
 endif
+
+LLVM_KERNEL_MAKE_FLAGS += \
+    AR=$(TARGET_KERNEL_CLANG_PATH)/bin/llvm-ar \
+    LD=$(TARGET_KERNEL_CLANG_PATH)/bin/ld.lld
+
+ifeq ($(TARGET_KERNEL_LLVM_BINUTILS),true)
+    ifneq ($(TARGET_KERNEL_NO_GCC),true)
+        KERNEL_MAKE_FLAGS += $(LLVM_KERNEL_MAKE_FLAGS)
+    endif
+endif
+
+KERNEL_BUILD_TOOLS += \
+    $(CORE_MAKE_FLAGS) \
+    $(LEGACY_KERNEL_MAKE_FLAGS) \
+    $(LLVM_KERNEL_MAKE_FLAGS) \
+    HOSTLD=$(TARGET_KERNEL_CLANG_PATH)/bin/ld.lld \
+    HOSTAR=$(TARGET_KERNEL_CLANG_PATH)/bin/llvm-ar \
+    REAL_CC=$(TARGET_KERNEL_CLANG_PATH)/bin/clang
 
 # Add back threads, ninja cuts this to $(nproc)/2
 KERNEL_MAKE_FLAGS += -j$(shell $(EXTRA_TOOLS)/$(HOST_PREBUILT_TAG)/bin/nproc --all)
@@ -243,15 +275,6 @@ else
 endif
 
 # Use LLVM's substitutes for GNU binutils if compatible kernel version.
-ifeq ($(TARGET_KERNEL_NO_GCC),true)
-    TARGET_KERNEL_LLVM_BINUTILS := true
-else
-    ifneq ($(filter 4.14 4.19 5.4, $(TARGET_KERNEL_VERSION)),)
-        TARGET_KERNEL_LLVM_BINUTILS := true
-    endif
-endif
-TARGET_KERNEL_LLVM_BINUTILS ?= false
-
 ifeq ($(TARGET_KERNEL_LLVM_BINUTILS),true)
     KERNEL_MAKE_FLAGS += LLVM=1 LLVM_IAS=1
     ifneq ($(TARGET_KERNEL_NO_GCC),true)
@@ -259,7 +282,5 @@ ifeq ($(TARGET_KERNEL_LLVM_BINUTILS),true)
             KERNEL_MAKE_FLAGS := $(patsubst LLVM_IAS=1,LLVM_IAS=0,$(KERNEL_MAKE_FLAGS))
             TARGET_KERNEL_ADDITIONAL_FLAGS := $(patsubst LLVM_IAS=0,,$(TARGET_KERNEL_ADDITIONAL_FLAGS))
         endif
-        KERNEL_MAKE_FLAGS += AR=$(TARGET_KERNEL_CLANG_PATH)/bin/llvm-ar
-        KERNEL_MAKE_FLAGS += LD=$(TARGET_KERNEL_CLANG_PATH)/bin/ld.lld
     endif
 endif

@@ -89,6 +89,13 @@ ifeq ($(KERNEL_ARCH),x86_64)
 else
     KERNEL_DEFCONFIG_ARCH := $(KERNEL_ARCH)
 endif
+
+GKI_KERNEL_FRAGMENT := $(TARGET_GKI_KERNEL_FRAGMENT)
+GKI_FRAGMENT_SRC := $(TARGET_GKI_FRAGMENT_SRC)
+ifeq ($(GKI_FRAGMENT_SRC),)
+    GKI_FRAGMENT_SRC := $(KERNEL_SRC)
+endif
+
 KERNEL_DEFCONFIG_DIR := $(KERNEL_SRC)/arch/$(KERNEL_DEFCONFIG_ARCH)/configs
 ALL_KERNEL_DEFCONFIG_SRCS := $(foreach config,$(KERNEL_DEFCONFIG),$(KERNEL_DEFCONFIG_DIR)/$(config))
 ALL_RECOVERY_KERNEL_DEFCONFIG_SRCS := $(foreach config,$(RECOVERY_DEFCONFIG),$(KERNEL_DEFCONFIG_DIR)/$(config))
@@ -238,6 +245,21 @@ define make-external-module-target
 $(PATH_OVERRIDE) $(KERNEL_MAKE_CMD) $(KERNEL_MAKE_FLAGS) -C $(TARGET_KERNEL_EXT_MODULE_ROOT)/$(1) M=$(2)/$(1) KERNEL_SRC=$(BUILD_TOP)/$(KERNEL_SRC) OUT_DIR=$(KERNEL_BUILD_OUT_PREFIX)$(KERNEL_OUT) O=$(KERNEL_BUILD_OUT_PREFIX)$(KERNEL_OUT) ARCH=$(KERNEL_ARCH) $(KERNEL_CROSS_COMPILE) $(3)
 endef
 
+# Generate kernel defconfig from a gki_defconfig and fragment
+# $(1): Output defconfig name
+# $(2): The fragment to use for generation (not needed if generate_defconfig.sh is used)
+define generate-kernel-config
+	$(hide) if [ -f $(KERNEL_SRC)/scripts/gki/generate_defconfig.sh ]; then \
+			$(KERNEL_BUILD_TOOLS) ARCH=$(KERNEL_ARCH) $(KERNEL_CROSS_COMPILE) \
+				KERN_OUT=$(KERNEL_OUT) MAKE_PATH=$(PREBUILT_TOOLS_PATH)/ \
+				TARGET_BUILD_VARIANT=user && $(KERNEL_SRC)/scripts/gki/generate_defconfig.sh $(1); \
+		elif [ ! -z "$(2)" ] && [ -f $(KERNEL_SRC)/scripts/kconfig/merge_config.sh ]; then \
+			KCONFIG_CONFIG=$(KERNEL_SRC)/arch/$(KERNEL_ARCH)/configs/$(1) \
+				$(KERNEL_SRC)/scripts/kconfig/merge_config.sh -m -r \
+				$(KERNEL_SRC)/arch/$(KERNEL_ARCH)/configs/gki_defconfig $(GKI_FRAGMENT_SRC)/arch/$(KERNEL_ARCH)/configs/$(2); \
+		fi
+endef
+
 # Generate kernel .config from a given defconfig
 # $(1): Output path (The value passed to O=)
 # $(2): The defconfig to process (just the filename, no need for full path to file)
@@ -369,6 +391,9 @@ $(KERNEL_OUT):
 
 $(KERNEL_CONFIG): $(KERNEL_OUT) $(ALL_KERNEL_DEFCONFIG_SRCS)
 	@echo "Building Kernel Config"
+ifeq ($(TARGET_GENERATE_GKI_DEFCONFIG),true)
+	$(call generate-kernel-config,$(KERNEL_DEFCONFIG),$(GKI_KERNEL_FRAGMENT))
+endif
 	$(call make-kernel-config,$(KERNEL_OUT),$(KERNEL_DEFCONFIG))
 
 $(TARGET_PREBUILT_INT_KERNEL): $(KERNEL_CONFIG) $(DEPMOD) $(DTC) $(LZ4) $(PAHOLE)
