@@ -28,9 +28,8 @@
 #
 #   TARGET_KERNEL_LLVM_BINUTILS        = Use LLVM's substitutes for GNU binutils, defaults to false
 #
-#   TARGET_KERNEL_LEGACY_COMPILE       = Use legacy options for compilation
-#                                          enabled defaults to r416183b for LLVM, GCC available
-#                                          disabled defaults to AOSP default (r450784d) for LLVM, GCC unavailable
+#   TARGET_KERNEL_NO_GCC               = Fully compile the kernel without GCC.
+#                                        Defaults to false
 #
 #   TARGET_KERNEL_CLANG_VERSION        = Clang prebuilts version, optional
 #
@@ -125,13 +124,13 @@ endif
 
 # Compilation tools
 ifneq ($(filter 3.18 4.4 4.9 4.14 4.19 5.4, $(TARGET_KERNEL_VERSION)),)
-    TARGET_KERNEL_LEGACY_COMPILE := true
+    TARGET_KERNEL_NO_GCC := false
 endif
-TARGET_KERNEL_LEGACY_COMPILE ?= false
+TARGET_KERNEL_NO_GCC ?= true
 
 KERNEL_CROSS_COMPILE := 
 
-ifeq ($(TARGET_KERNEL_LEGACY_COMPILE),true)
+ifneq ($(TARGET_KERNEL_NO_GCC),true)
     # GCC
     GCC_PREBUILTS := $(BUILD_TOP)/prebuilts/gcc/$(HOST_PREBUILT_TAG)
 
@@ -158,7 +157,7 @@ ifeq ($(TARGET_KERNEL_LEGACY_COMPILE),true)
 endif
 
 # LLVM
-ifeq ($(TARGET_KERNEL_LEGACY_COMPILE),true)
+ifneq ($(TARGET_KERNEL_NO_GCC),true)
     TARGET_KERNEL_CLANG_VERSION := r416183b
 endif
 TARGET_KERNEL_CLANG_VERSION ?= r450784d
@@ -169,7 +168,7 @@ else
     TARGET_KERNEL_CLANG_PATH ?= $(BUILD_TOP)/prebuilts/clang/host/$(HOST_PREBUILT_TAG)/clang-$(TARGET_KERNEL_CLANG_VERSION)
 endif
 
-ifeq ($(TARGET_KERNEL_LEGACY_COMPILE),true)
+ifneq ($(TARGET_KERNEL_NO_GCC),true)
     ifeq ($(KERNEL_ARCH),arm64)
         KERNEL_CLANG_TRIPLE ?= CLANG_TRIPLE=aarch64-linux-gnu-
     else ifeq ($(KERNEL_ARCH),arm)
@@ -199,7 +198,7 @@ TOOLS_PATH_OVERRIDE := \
     PATH=$(KERNEL_TOOLS):$$PATH \
     LD_LIBRARY_PATH=$(KERNEL_LD_LIBRARY):$$LD_LIBRARY_PATH
 
-ifeq ($(TARGET_KERNEL_LEGACY_COMPILE),true)
+ifneq ($(TARGET_KERNEL_NO_GCC),true)
     TOOLS_PATH_OVERRIDE += \
         PATH=$(KERNEL_TOOLCHAIN_$(KERNEL_ARCH)):$$PATH
     ifeq ($(KERNEL_ARCH),arm64)
@@ -220,7 +219,7 @@ KERNEL_MAKE_FLAGS += \
     YACC=$(SYSTEM_TOOLS)/$(HOST_PREBUILT_TAG)/bin/bison \
     M4=$(SYSTEM_TOOLS)/$(HOST_PREBUILT_TAG)/bin/m4
 
-ifeq ($(TARGET_KERNEL_LEGACY_COMPILE),true)
+ifneq ($(TARGET_KERNEL_NO_GCC),true)
     KERNEL_MAKE_FLAGS += \
         HOSTCC=$(TARGET_KERNEL_CLANG_PATH)/bin/clang \
         HOSTCXX=$(TARGET_KERNEL_CLANG_PATH)/bin/clang++
@@ -229,7 +228,7 @@ endif
 # Add back threads, ninja cuts this to $(nproc)/2
 KERNEL_MAKE_FLAGS += -j$(shell $(EXTRA_TOOLS)/$(HOST_PREBUILT_TAG)/bin/nproc --all)
 
-ifeq ($(TARGET_KERNEL_LEGACY_COMPILE),true)
+ifneq ($(TARGET_KERNEL_NO_GCC),true)
     ifeq ($(HOST_OS),darwin)
         KERNEL_MAKE_FLAGS += HOSTCFLAGS="-I$(BUILD_TOP)/external/elfutils/libelf -I/usr/local/opt/openssl/include" HOSTLDFLAGS="-L/usr/local/opt/openssl/lib -fuse-ld=lld"
     else
@@ -244,7 +243,7 @@ else
 endif
 
 # Use LLVM's substitutes for GNU binutils if compatible kernel version.
-ifeq ($(TARGET_KERNEL_LEGACY_COMPILE),false)
+ifeq ($(TARGET_KERNEL_NO_GCC),true)
     TARGET_KERNEL_LLVM_BINUTILS := true
 else
     ifneq ($(filter 4.14 4.19 5.4, $(TARGET_KERNEL_VERSION)),)
@@ -255,7 +254,7 @@ TARGET_KERNEL_LLVM_BINUTILS ?= false
 
 ifeq ($(TARGET_KERNEL_LLVM_BINUTILS),true)
     KERNEL_MAKE_FLAGS += LLVM=1 LLVM_IAS=1
-    ifeq ($(TARGET_KERNEL_LEGACY_COMPILE),true)
+    ifneq ($(TARGET_KERNEL_NO_GCC),true)
         ifneq (,$(findstring LLVM_IAS=0,$(TARGET_KERNEL_ADDITIONAL_FLAGS)))
             KERNEL_MAKE_FLAGS := $(patsubst LLVM_IAS=1,LLVM_IAS=0,$(KERNEL_MAKE_FLAGS))
             TARGET_KERNEL_ADDITIONAL_FLAGS := $(patsubst LLVM_IAS=0,,$(TARGET_KERNEL_ADDITIONAL_FLAGS))
