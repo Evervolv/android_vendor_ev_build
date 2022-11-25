@@ -90,7 +90,7 @@ endif
 KERNEL_VERSION := $(shell grep -s "^VERSION = " $(TARGET_KERNEL_SOURCE)/Makefile | awk '{ print $$3 }')
 KERNEL_PATCHLEVEL := $(shell grep -s "^PATCHLEVEL = " $(TARGET_KERNEL_SOURCE)/Makefile | awk '{ print $$3 }')
 KERNEL_SUBLEVEL := $(shell grep -s "^SUBLEVEL = " $(TARGET_KERNEL_SOURCE)/Makefile | awk '{ print $$3 }')
-TARGET_KERNEL_VERSION ?= $(shell echo $(KERNEL_VERSION)"."$(KERNEL_PATCHLEVEL))
+TARGET_KERNEL_VERSION := $(KERNEL_VERSION).$(KERNEL_PATCHLEVEL)
 
 # Architecture
 TARGET_KERNEL_ARCH := $(strip $(TARGET_KERNEL_ARCH))
