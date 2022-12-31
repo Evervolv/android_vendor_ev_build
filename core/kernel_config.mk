@@ -189,7 +189,7 @@ ifneq ($(TARGET_KERNEL_NO_GCC),true)
 endif
 
 ifeq ($(KERNEL_CC),)
-    KERNEL_CC := CC="$(CCACHE_BIN) $(TARGET_KERNEL_CLANG_PATH)/bin/clang"
+    KERNEL_CC := CC="$(CCACHE_BIN) $(TARGET_KERNEL_CLANG_PATH)/bin/clang --cuda-path=/dev/null"
 endif
 
 KERNEL_CROSS_COMPILE += $(KERNEL_CC)
