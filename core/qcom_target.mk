@@ -18,7 +18,7 @@ $(call set-device-specific-path,AUDIO,audio,hardware/qcom-caf/$(QCOM_HARDWARE_VA
 $(call set-device-specific-path,DISPLAY,display,hardware/qcom-caf/$(QCOM_HARDWARE_VARIANT)/display)
 $(call set-device-specific-path,MEDIA,media,hardware/qcom-caf/$(QCOM_HARDWARE_VARIANT)/media)
 $(call set-device-specific-path,BT_VENDOR,bt-vendor,hardware/qcom-caf/bt)
-ifneq ($(filter $(LEGACY_UM_PLATFORMS),$(TARGET_BOARD_PLATFORM)),)
+ifneq ($(filter $(LEGACY_QCOM_PLATFORMS),$(TARGET_BOARD_PLATFORM)),)
 $(call set-device-specific-path,DATA_IPA_CFG_MGR,data-ipa-cfg-mgr,$(QC_OPEN_PATH)/data-ipa-cfg-mgr-legacy-um)
 else
 $(call set-device-specific-path,DATA_IPA_CFG_MGR,data-ipa-cfg-mgr,$(QC_OPEN_PATH)/data-ipa-cfg-mgr)
