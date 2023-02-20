@@ -1,4 +1,16 @@
 # Board platform lists to be used for platform specific features.
+# TARGET_BOARD_PLATFORM specific featurization
+
+# Platform name variables - used in makefiles everywhere
+KONA := kona #SM8250
+LITO := lito #SM7250
+BENGAL := bengal #SM6115
+MSMNILE := msmnile #SM8150
+MSMSTEPPE := sm6150
+TRINKET := trinket #SM6125
+ATOLL := atoll #SM6250
+LAHAINA := lahaina #SM8350
+HOLI := holi #SM4350
 
 # A Family
 A_FAMILY := \
@@ -34,28 +46,23 @@ UM_4_4_FAMILY := \
     sdm660
 
 UM_4_9_FAMILY := \
-    sdm845 \
-    sdm710
-
-# Define platform variable names, QCOM didn't drop them for production, e.g.
-# ifneq ($(filter $(MSMSTEPPE) $(TRINKET),$(TARGET_BOARD_PLATFORM)),)
-MSMSTEPPE := sm6150
-TRINKET := trinket #SM6125
+    sdm710 \
+    sdm845
 
 UM_4_14_FAMILY := \
     $(MSMSTEPPE) \
     $(TRINKET) \
-    msmnile \
-    atoll
+    $(MSMNILE) \
+    $(ATOLL)
 
 UM_4_19_FAMILY := \
-    kona \
-    lito \
-    bengal
+    $(KONA) \
+    $(LITO) \
+    $(BENGAL)
 
 UM_5_4_FAMILY := \
-    holi \
-    lahaina
+    $(HOLI) \
+    $(LAHAINA)
 
 UM_PLATFORMS := $(UM_3_18_FAMILY) $(UM_4_4_FAMILY) $(UM_4_9_FAMILY) $(UM_4_14_FAMILY) $(UM_4_19_FAMILY) $(UM_5_4_FAMILY)
 LEGACY_UM_PLATFORMS := $(UM_3_18_FAMILY) $(UM_4_4_FAMILY) $(UM_4_9_FAMILY) $(UM_4_14_FAMILY) $(UM_4_19_FAMILY) $(UM_5_4_FAMILY)
