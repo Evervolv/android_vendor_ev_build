@@ -23,7 +23,7 @@ endif
 
 # Bacon update package
 ifneq ($(TARGET_OTA_PACKAGE_NAME),)
-OTA_PACKAGE_NAME := $(TARGET_OTA_PACKAGE_NAME)
+OTA_PACKAGE_NAME := $(shell echo ${TARGET_OTA_PACKAGE_NAME} | tr [:upper:] [:lower:])
 else
 OTA_PACKAGE_NAME := $(TARGET_PRODUCT)-ota-$(FILE_NAME_TAG)
 endif
