@@ -459,7 +459,7 @@ function update_aosp_tag() # <Tag>
     if [[ $k = c ]] ; then
         echo "Sync the updated manifest"
         cd $T
-        repo sync -c --force-sync -j$(nproc --all)
+        repo sync -c --force-sync
 
         echo "Start pulling updates to our forked repos"
         local AOSP_REPOS=$(cat $T/android/snippets/aosp.xml | grep 'remote="evervolv"' | awk '{print $2}' | awk -F '"' '{print $2}')
