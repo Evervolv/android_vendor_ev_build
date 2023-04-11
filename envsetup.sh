@@ -84,7 +84,10 @@ function aospremote() {
     fi
     if (echo $PROJECT | grep -qv "^device")
     then
-        local PFX="platform/"
+        if (echo $PROJECT | grep -qv "^kernel")
+        then
+            local PFX="kernel/"
+        fi
     fi
     git remote add aosp https://android.googlesource.com/$PFX$PROJECT
     echo "Remote 'aosp' created"
@@ -113,7 +116,10 @@ function cafremote()
     fi
     if (echo $PROJECT | grep -qv "^device")
     then
-        local PFX="platform/"
+        if (echo $PROJECT | grep -qv "^kernel")
+        then
+            local PFX="kernel/"
+        fi
     fi
     git remote add caf https://git.codelinaro.org/clo/la/$PFX$PROJECT
     echo "Remote 'caf' created"
