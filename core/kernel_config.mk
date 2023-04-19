@@ -124,18 +124,16 @@ endif
 
 # Compilation tools
 ifneq ($(filter 3.18 4.4 4.9 4.14 4.19 5.4, $(TARGET_KERNEL_VERSION)),)
-    TARGET_KERNEL_NO_GCC := false
-endif
-TARGET_KERNEL_NO_GCC ?= true
-
-ifeq ($(TARGET_KERNEL_NO_GCC),true)
-    TARGET_KERNEL_LLVM_BINUTILS := true
-else
-    ifneq ($(filter 4.14 4.19 5.4, $(TARGET_KERNEL_VERSION)),)
-        TARGET_KERNEL_LLVM_BINUTILS := true
+    TARGET_KERNEL_NO_GCC ?= false
+    ifneq ($(filter 3.18 4.4 4.9, $(TARGET_KERNEL_VERSION)),)
+        TARGET_KERNEL_LLVM_BINUTILS ?= false
+    else
+        TARGET_KERNEL_LLVM_BINUTILS ?= true
     endif
+else
+    TARGET_KERNEL_NO_GCC ?= true
+    TARGET_KERNEL_LLVM_BINUTILS ?= true
 endif
-TARGET_KERNEL_LLVM_BINUTILS ?= false
 
 KERNEL_CROSS_COMPILE := 
 
@@ -166,14 +164,14 @@ ifneq ($(TARGET_KERNEL_NO_GCC),true)
 endif
 
 # LLVM
-ifneq ($(TARGET_KERNEL_NO_GCC),true)
+ifneq ($(filter 3.18 4.4 4.9, $(TARGET_KERNEL_VERSION)),)
     TARGET_KERNEL_CLANG_VERSION ?= r416183b
 else
     TARGET_KERNEL_CLANG_VERSION ?= r450784d
 endif
 
-ifneq ($(wildcard $(BUILD_TOP)/prebuilts/evervolv-tools/$(HOST_PREBUILT_TAG)/clang-$(TARGET_KERNEL_CLANG_VERSION)/bin/clang),)
-    TARGET_KERNEL_CLANG_PATH ?= $(BUILD_TOP)/prebuilts/evervolv-tools/$(HOST_PREBUILT_TAG)/clang-$(TARGET_KERNEL_CLANG_VERSION)
+ifeq ($(TARGET_KERNEL_CLANG_VERSION)),r416183b)
+    TARGET_KERNEL_CLANG_PATH ?= $(BUILD_TOP)/prebuilts/evervolv-tools/$(HOST_PREBUILT_TAG)/clang-r416183b
 else
     TARGET_KERNEL_CLANG_PATH ?= $(BUILD_TOP)/prebuilts/clang/host/$(HOST_PREBUILT_TAG)/clang-$(TARGET_KERNEL_CLANG_VERSION)
 endif
