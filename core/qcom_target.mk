@@ -36,6 +36,8 @@ else ifneq ($(filter $(UM_5_4_FAMILY),$(TARGET_BOARD_PLATFORM)),)
     QCOM_HARDWARE_VARIANT ?= sm8350
 else ifneq ($(filter $(UM_5_10_FAMILY),$(TARGET_BOARD_PLATFORM)),)
     QCOM_HARDWARE_VARIANT ?= sm8450
+else ifneq ($(filter $(UM_5_15_FAMILY),$(TARGET_BOARD_PLATFORM)),)
+    QCOM_HARDWARE_VARIANT := sm8550
 endif
 QCOM_HARDWARE_VARIANT ?= $(TARGET_BOARD_PLATFORM)
 
@@ -65,7 +67,7 @@ ifneq ($(filter $(QSSI_SUPPORTED_PLATFORMS),$(TARGET_BOARD_PLATFORM)),)
 PRODUCT_SOONG_NAMESPACES += \
     $(QC_OPEN_PATH)/commonsys-intf/display
 
-ifeq ($(filter $(UM_5_10_FAMILY),$(TARGET_BOARD_PLATFORM)),)
+ifeq ($(filter $(UM_5_10_FAMILY) $(UM_5_15_FAMILY),$(TARGET_BOARD_PLATFORM)),)
 PRODUCT_SOONG_NAMESPACES += \
     $(QC_OPEN_PATH)/commonsys/display
 endif
