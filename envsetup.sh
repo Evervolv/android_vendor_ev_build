@@ -86,7 +86,7 @@ function aospremote() {
     then
         if (echo $PROJECT | grep -qv "^kernel")
         then
-            local PFX="kernel/"
+            local PFX="platform/"
         fi
     fi
     git remote add aosp https://android.googlesource.com/$PFX$PROJECT
@@ -118,7 +118,7 @@ function cafremote()
     then
         if (echo $PROJECT | grep -qv "^kernel")
         then
-            local PFX="kernel/"
+            local PFX="platform/"
         fi
     fi
     git remote add caf https://git.codelinaro.org/clo/la/$PFX$PROJECT
