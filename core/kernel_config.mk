@@ -123,6 +123,14 @@ ifneq ($(USE_CCACHE),)
 endif
 
 # Compilation tools
+ifeq ($(shell expr $(KERNEL_VERSION) \>= 5), 1)
+    # 5.10+ can fully compile without GCC by default
+    ifeq ($(shell expr $(KERNEL_PATCHLEVEL) \>= 10), 1)
+        TARGET_KERNEL_NO_GCC := true
+    endif
+endif
+TARGET_KERNEL_NO_GCC ?= false
+
 ifeq ($(TARGET_KERNEL_NO_GCC),true)
     TARGET_KERNEL_LLVM_BINUTILS := true
 endif
