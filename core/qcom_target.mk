@@ -39,9 +39,12 @@ else ifneq ($(filter $(UM_5_10_FAMILY),$(TARGET_BOARD_PLATFORM)),)
 endif
 QCOM_HARDWARE_VARIANT ?= $(TARGET_BOARD_PLATFORM)
 
-$(call set-device-specific-path,AUDIO,audio,hardware/qcom-caf/$(QCOM_HARDWARE_VARIANT)/audio)
-$(call set-device-specific-path,DISPLAY,display,hardware/qcom-caf/$(QCOM_HARDWARE_VARIANT)/display)
-$(call set-device-specific-path,MEDIA,media,hardware/qcom-caf/$(QCOM_HARDWARE_VARIANT)/media)
+# Allow a device to opt-out hardset of PRODUCT_SOONG_NAMESPACES
+QCOM_SOONG_NAMESPACE ?= hardware/qcom-caf/$(QCOM_HARDWARE_VARIANT)
+
+$(call set-device-specific-path,AUDIO,audio,$(QCOM_SOONG_NAMESPACE)/audio)
+$(call set-device-specific-path,DISPLAY,display,$(QCOM_SOONG_NAMESPACE)/display)
+$(call set-device-specific-path,MEDIA,media,$(QCOM_SOONG_NAMESPACE)/media)
 $(call set-device-specific-path,BT_VENDOR,bt-vendor,hardware/qcom-caf/bt)
 ifneq ($(filter $(LEGACY_QCOM_PLATFORMS),$(TARGET_BOARD_PLATFORM)),)
 $(call set-device-specific-path,DATA_IPA_CFG_MGR,data-ipa-cfg-mgr,$(QC_OPEN_PATH)/data-ipa-cfg-mgr-legacy-um)
@@ -52,8 +55,6 @@ $(call set-device-specific-path,DATASERVICES,dataservices,$(QC_OPEN_PATH)/datase
 $(call set-device-specific-path,VR,vr,hardware/qcom-caf/vr)
 $(call set-device-specific-path,WLAN,wlan,hardware/qcom-caf/wlan)
 
-# Allow a device to opt-out hardset of PRODUCT_SOONG_NAMESPACES
-QCOM_SOONG_NAMESPACE ?= hardware/qcom-caf/$(QCOM_HARDWARE_VARIANT)
 PRODUCT_SOONG_NAMESPACES += \
     $(call project-path-for,qcom-data-ipa-cfg-mgr) \
     $(call project-path-for,qcom-dataservices) \
