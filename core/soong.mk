@@ -33,10 +33,10 @@ SOONG_CONFIG_evervolvGlobalVars += \
     disable_postrender_cleanup \
     has_legacy_camera_hal1 \
     has_memfd_backport \
-    target_health_charging_control_path \
+    target_health_charging_control_charging_path \
+    target_health_charging_control_charging_enabled \
+    target_health_charging_control_charging_disabled \
     target_health_charging_control_deadline_path \
-    target_health_charging_control_enable \
-    target_health_charging_control_disable \
     target_health_charging_control_supports_bypass \
     target_health_charging_control_supports_deadline \
     target_health_charging_control_supports_toggle \
@@ -65,8 +65,8 @@ TARGET_DISABLE_POSTRENDER_CLEANUP ?= false
 TARGET_GRALLOC_HANDLE_HAS_RESERVED_SIZE ?= false
 TARGET_HAS_LEGACY_CAMERA_HAL1 ?= false
 TARGET_HAS_MEMFD_BACKPORT ?= false
-TARGET_HEALTH_CHARGING_CONTROL_ENABLE ?= 1
-TARGET_HEALTH_CHARGING_CONTROL_DISABLE ?= 0
+TARGET_HEALTH_CHARGING_CONTROL_CHARGING_ENABLED ?= 1
+TARGET_HEALTH_CHARGING_CONTROL_CHARGING_DISABLED ?= 0
 TARGET_HEALTH_CHARGING_CONTROL_SUPPORTS_BYPASS ?= true
 TARGET_HEALTH_CHARGING_CONTROL_SUPPORTS_DEADLINE ?= false
 TARGET_HEALTH_CHARGING_CONTROL_SUPPORTS_TOGGLE ?= true
@@ -82,10 +82,10 @@ SOONG_CONFIG_evervolvGlobalVars_aapt_version_code := $(shell date -u +%Y%m%d)
 SOONG_CONFIG_evervolvGlobalVars_disable_postrender_cleanup := $(TARGET_DISABLE_POSTRENDER_CLEANUP)
 SOONG_CONFIG_evervolvGlobalVars_has_legacy_camera_hal1 := $(TARGET_HAS_LEGACY_CAMERA_HAL1)
 SOONG_CONFIG_evervolvGlobalVars_has_memfd_backport := $(TARGET_HAS_MEMFD_BACKPORT)
-SOONG_CONFIG_evervolvGlobalVars_target_health_charging_control_path := $(TARGET_HEALTH_CHARGING_CONTROL_PATH)
+SOONG_CONFIG_evervolvGlobalVars_target_health_charging_control_charging_path := $(TARGET_HEALTH_CHARGING_CONTROL_CHARGING_PATH)
+SOONG_CONFIG_evervolvGlobalVars_target_health_charging_control_charging_enabled := $(TARGET_HEALTH_CHARGING_CONTROL_CHARGING_ENABLED)
+SOONG_CONFIG_evervolvGlobalVars_target_health_charging_control_charging_disabled := $(TARGET_HEALTH_CHARGING_CONTROL_CHARGING_DISABLED)
 SOONG_CONFIG_evervolvGlobalVars_target_health_charging_control_deadline_path := $(TARGET_HEALTH_CHARGING_CONTROL_DEADLINE_PATH)
-SOONG_CONFIG_evervolvGlobalVars_target_health_charging_control_enable := $(TARGET_HEALTH_CHARGING_CONTROL_ENABLE)
-SOONG_CONFIG_evervolvGlobalVars_target_health_charging_control_disable := $(TARGET_HEALTH_CHARGING_CONTROL_DISABLE)
 SOONG_CONFIG_evervolvGlobalVars_target_health_charging_control_supports_bypass := $(TARGET_HEALTH_CHARGING_CONTROL_SUPPORTS_BYPASS)
 SOONG_CONFIG_evervolvGlobalVars_target_health_charging_control_supports_deadline := $(TARGET_HEALTH_CHARGING_CONTROL_SUPPORTS_DEADLINE)
 SOONG_CONFIG_evervolvGlobalVars_target_health_charging_control_supports_toggle := $(TARGET_HEALTH_CHARGING_CONTROL_SUPPORTS_TOGGLE)

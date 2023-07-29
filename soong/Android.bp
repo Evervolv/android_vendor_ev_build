@@ -364,10 +364,10 @@ soong_config_module_type {
         "target_health_charging_control_supports_deadline",
     ],
     value_variables: [
-        "target_health_charging_control_path",
+        "target_health_charging_control_charging_path",
+        "target_health_charging_control_charging_enabled",
+        "target_health_charging_control_charging_disabled",
         "target_health_charging_control_deadline_path",
-        "target_health_charging_control_enable",
-        "target_health_charging_control_disable",
     ],
     properties: ["cppflags"],
 }
@@ -384,17 +384,17 @@ health_charging_control {
         target_health_charging_control_supports_deadline: {
             cppflags: ["-DHEALTH_CHARGING_CONTROL_SUPPORTS_DEADLINE"],
         },
-        target_health_charging_control_path: {
-            cppflags: ["-DHEALTH_CHARGING_CONTROL_PATH=\"%s\""],
+        target_health_charging_control_charging_path: {
+            cppflags: ["-DHEALTH_CHARGING_CONTROL_CHARGING_PATH=\"%s\""],
+        },
+        target_health_charging_control_charging_enabled: {
+            cppflags: ["-DHEALTH_CHARGING_CONTROL_CHARGING_ENABLED=\"%s\""],
+        },
+        target_health_charging_control_charging_disabled: {
+            cppflags: ["-DHEALTH_CHARGING_CONTROL_CHARGING_DISABLED=\"%s\""],
         },
         target_health_charging_control_deadline_path: {
             cppflags: ["-DHEALTH_CHARGING_CONTROL_DEADLINE_PATH=\"%s\""],
-        },
-        target_health_charging_control_enable: {
-            cppflags: ["-DHEALTH_CHARGING_CONTROL_ENABLE=\"%s\""],
-        },
-        target_health_charging_control_disable: {
-            cppflags: ["-DHEALTH_CHARGING_CONTROL_DISABLE=\"%s\""],
         },
     },
 }
