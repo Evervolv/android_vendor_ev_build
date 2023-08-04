@@ -269,7 +269,7 @@ ifneq ($(TARGET_KERNEL_NO_GCC),true)
     else
         KERNEL_MAKE_FLAGS += HOSTLDFLAGS="-L/usr/lib/x86_64-linux-gnu -L/usr/lib64 -fuse-ld=lld"
         ifneq ($(TARGET_KERNEL_EXCLUDE_HOST_HEADERS),true)
-            KERNEL_MAKE_FLAGS += CPATH="/usr/include:/usr/include/x86_64-linux-gnu"
+            KERNEL_MAKE_FLAGS += HOSTCFLAGS="-I/usr/include -I/usr/include/x86_64-linux-gnu"
         endif
     endif
 else
