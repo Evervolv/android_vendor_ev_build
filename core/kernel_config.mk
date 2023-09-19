@@ -252,6 +252,15 @@ ifeq ($(TARGET_KERNEL_LLVM_BINUTILS),true)
     endif
 endif
 
+# Since Linux 5.10, pahole is required
+ifneq ($(KERNEL_VERSION),)
+    ifeq ($(shell expr $(KERNEL_VERSION) \>= 5), 1)
+        ifeq ($(shell expr $(KERNEL_PATCHLEVEL) \>= 10), 1)
+            KERNEL_MAKE_FLAGS += PAHOLE=$(BUILD_TOP)/prebuilts/kernel-build-tools/linux-x86/bin/pahole
+        endif
+    endif
+endif
+
 KERNEL_BUILD_TOOLS += \
     $(CORE_MAKE_FLAGS) \
     $(LEGACY_KERNEL_MAKE_FLAGS) \
