@@ -232,6 +232,10 @@ CORE_MAKE_FLAGS += \
     YACC=$(SYSTEM_TOOLS)/$(HOST_PREBUILT_TAG)/bin/bison \
     M4=$(SYSTEM_TOOLS)/$(HOST_PREBUILT_TAG)/bin/m4
 
+# Since Linux 5.10, pahole is required
+CORE_MAKE_FLAGS += \
+    PAHOLE=$(BUILD_TOP)/prebuilts/kernel-build-tools/linux-x86/bin/pahole
+
 KERNEL_MAKE_FLAGS := $(CORE_MAKE_FLAGS)
 
 LEGACY_KERNEL_MAKE_FLAGS += \
@@ -249,15 +253,6 @@ LLVM_KERNEL_MAKE_FLAGS += \
 ifeq ($(TARGET_KERNEL_LLVM_BINUTILS),true)
     ifneq ($(TARGET_KERNEL_NO_GCC),true)
         KERNEL_MAKE_FLAGS += $(LLVM_KERNEL_MAKE_FLAGS)
-    endif
-endif
-
-# Since Linux 5.10, pahole is required
-ifneq ($(KERNEL_VERSION),)
-    ifeq ($(shell expr $(KERNEL_VERSION) \>= 5), 1)
-        ifeq ($(shell expr $(KERNEL_PATCHLEVEL) \>= 10), 1)
-            KERNEL_MAKE_FLAGS += PAHOLE=$(BUILD_TOP)/prebuilts/kernel-build-tools/linux-x86/bin/pahole
-        endif
     endif
 endif
 
