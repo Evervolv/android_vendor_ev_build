@@ -167,7 +167,7 @@ endif
 ifneq ($(TARGET_KERNEL_LLVM_BINUTILS),true)
     TARGET_KERNEL_CLANG_VERSION ?= r416183b
 else
-    TARGET_KERNEL_CLANG_VERSION ?= r450784d
+    TARGET_KERNEL_CLANG_VERSION ?= r487747c
 endif
 
 ifneq ($(wildcard $(BUILD_TOP)/prebuilts/evervolv-tools/$(HOST_PREBUILT_TAG)/clang-$(TARGET_KERNEL_CLANG_VERSION)/bin/clang),)
