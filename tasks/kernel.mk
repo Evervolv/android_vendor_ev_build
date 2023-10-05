@@ -49,7 +49,7 @@
 #
 #   BOARD_DTB_CFG                      = Path to a mkdtboimg.py config file for dtb.img
 #
-#   BOARD_DTBO_CFG                     = Path to a mkdtboimg.py config file
+#   BOARD_DTBO_CFG                     = Path to a mkdtboimg config file
 #
 #   BOARD_CUSTOM_DTBIMG_MK             = Path to a custom dtbimage makefile
 #
@@ -512,7 +512,7 @@ alldefconfig: $(KERNEL_OUT)
 		 $(call make-kernel-target,alldefconfig)
 
 MKDTIMG := $(HOST_OUT_EXECUTABLES)/mkdtimg$(HOST_EXECUTABLE_SUFFIX)
-MKDTBOIMG := $(HOST_OUT_EXECUTABLES)/mkdtboimg.py
+MKDTBOIMG := $(HOST_OUT_EXECUTABLES)/mkdtboimg$(HOST_EXECUTABLE_SUFFIX)
 MKDTBOIMG_FLAGS :=
 ifneq ($(BOARD_KERNEL_PAGESIZE),)
 MKDTBOIMG_FLAGS += --page_size=$(BOARD_KERNEL_PAGESIZE)
