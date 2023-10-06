@@ -236,6 +236,10 @@ CORE_MAKE_FLAGS += \
 CORE_MAKE_FLAGS += \
     PAHOLE=$(BUILD_TOP)/prebuilts/kernel-build-tools/linux-x86/bin/pahole
 
+# Pass prebuilt LZ4 path
+CORE_MAKE_FLAGS += \
+    LZ4=$(BUILD_TOP)/prebuilts/kernel-build-tools/linux-x86/bin/lz4
+
 KERNEL_MAKE_FLAGS := $(CORE_MAKE_FLAGS)
 
 LEGACY_KERNEL_MAKE_FLAGS += \
