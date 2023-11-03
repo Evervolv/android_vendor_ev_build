@@ -89,7 +89,7 @@ gralloc_10_usage_bits {
 soong_config_module_type {
     name: "gralloc_handle_custom_content_md_reserved_size",
     module_type: "cc_defaults",
-    config_namespace: "lineageGlobalVars",
+    config_namespace: "evervolvQcomVars",
     bool_variables: ["gralloc_handle_has_custom_content_md_reserved_size"],
     properties: ["export_cflags"],
 }
