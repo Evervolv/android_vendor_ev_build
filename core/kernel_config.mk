@@ -177,9 +177,7 @@ else
             endif
         endif
         ifeq ($(shell expr $(KERNEL_VERSION) \== 6), 1)
-            ifeq ($(shell expr $(KERNEL_PATCHLEVEL) \>= 1), 1)
-                KERNEL_CLANG_VERSION := r487747c
-            endif
+            KERNEL_CLANG_VERSION := r487747c
         endif
     endif
 endif
