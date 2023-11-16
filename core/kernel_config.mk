@@ -124,10 +124,13 @@ endif
 
 # Compilation tools
 ifneq ($(KERNEL_VERSION),)
-    ifeq ($(shell expr $(KERNEL_VERSION) \>= 5), 1)
+    ifeq ($(shell expr $(KERNEL_VERSION) \== 5), 1)
         ifeq ($(shell expr $(KERNEL_PATCHLEVEL) \>= 10), 1)
             TARGET_KERNEL_NO_GCC ?= true
         endif
+    endif
+    ifeq ($(shell expr $(KERNEL_VERSION) \>= 6), 1)
+        TARGET_KERNEL_NO_GCC ?= true
     endif
 endif
 
