@@ -303,6 +303,8 @@ else:
         if re.match(r"^android_device_[^_]*_" + device + "$", repo_name):
             print("Found repository: %s" % repository['name'])
             manufacturer = repo_name.replace("android_device_", "").replace("_" + device, "")
+            if re.match("moto", manufacturer):
+                manufacturer = "motorola"
 
             repo_path = "device/%s/%s" % (manufacturer, device)
 
