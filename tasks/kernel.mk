@@ -45,6 +45,9 @@
 #
 #   BOARD_KERNEL_LZ4_COMP_FLAGS        = Compression flags for KERNEL_IMAGE_NAME outside of the kernel build
 #
+#   BOARD_KERNEL_APPEND_DTBS           = List of DTBs to be appended to the kernel image,
+#                                          wildcard is allowed for filename.
+#
 #   BOARD_DTB_CFG                      = Path to a mkdtboimg.py config file for dtb.img
 #
 #   BOARD_DTBO_CFG                     = Path to a mkdtboimg config file
@@ -630,6 +633,21 @@ define compress-kernel-image
 		$(LZ4) $(BOARD_KERNEL_LZ4_COMP_FLAGS) $(1) $(2))
 endef
 
+# Append DTBs to kernel image
+# $(1): output directory path (The value passed to O=)
+# $(2): output kernel image path
+define append-dtbs-to-kernel-image
+	$(hide) if grep -q '^CONFIG_OF=y' $(1)/.config; then \
+			$(if $(BOARD_KERNEL_APPEND_DTBS),\
+				echo "Appending DTBs to kernel image";\
+				$(foreach dtb,$(BOARD_KERNEL_APPEND_DTBS),\
+					cat `find $(1)/arch/$(KERNEL_ARCH)/boot/dts/$(dir $(dtb)) -maxdepth 1 -type f -name "$(notdir $(dtb))"` >> $(2);\
+				)\
+			)\
+			true;\
+		fi
+endef
+
 endif # FULL_RECOVERY_KERNEL_BUILD or FULL_KERNEL_BUILD
 
 ifeq ($(NEEDS_KERNEL_COPY),true)
@@ -637,6 +655,8 @@ $(INSTALLED_KERNEL_TARGET): $(KERNEL_BIN)
 	$(transform-prebuilt-to-target)
 	$(if $(filter true,$(FULL_KERNEL_BUILD)),\
 		$(call compress-kernel-image,$(KERNEL_BIN),$@))
+	$(if $(filter true,$(FULL_KERNEL_BUILD)),\
+		$(call append-dtbs-to-kernel-image,$(KERNEL_OUT),$@))
 endif
 
 ifeq ($(RECOVERY_KERNEL_COPY),true)
@@ -644,6 +664,8 @@ $(INSTALLED_RECOVERY_KERNEL_TARGET): $(RECOVERY_BIN)
 	$(transform-prebuilt-to-target)
 	$(if $(filter true,$(FULL_RECOVERY_KERNEL_BUILD)),\
 		$(call compress-kernel-image,$(RECOVERY_BIN),$@))
+	$(if $(filter true,$(FULL_RECOVERY_KERNEL_BUILD)),\
+		$(call append-dtbs-to-kernel-image,$(RECOVERY_KERNEL_OUT),$@))
 endif
 
 .PHONY: recovery-kernel
