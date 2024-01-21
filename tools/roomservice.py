@@ -41,7 +41,7 @@ except ImportError:
 
 from xml.etree import ElementTree
 
-product = sys.argv[1]
+product = sys.argv[1];
 local_manifests_dir = ".repo/local_manifests"
 dependency_filename = 'ev.dependencies'
 repositories = []
@@ -76,8 +76,7 @@ try:
     authtuple = netrc.netrc().authenticators("api.github.com")
 
     if authtuple:
-        auth_string = ('%s:%s' % (authtuple[0], authtuple[2])).encode()
-        githubauth = base64.encodestring(auth_string).decode().replace('\n', '')
+        githubauth = base64.encodestring('%s:%s' % (authtuple[0], authtuple[2])).replace('\n', '')
     else:
         githubauth = None
 except:
@@ -87,20 +86,16 @@ def add_auth(githubreq):
     if githubauth:
         githubreq.add_header("Authorization","Basic %s" % githubauth)
 
-if not depsonly:
-    githubreq = urllib.request.Request("https://api.github.com/search/repositories?q=%s+user:Evervolv+in:name+fork:true" % device)
+page = 1
+while not depsonly:
+    githubreq = urllib.request.Request("https://api.github.com/users/Evervolv/repos?per_page=100&page=%d" % page)
     add_auth(githubreq)
     result = json.loads(urllib.request.urlopen(githubreq).read().decode())
-    try:
-        numresults = int(result['total_count'])
-    except:
-        print("Failed to search GitHub")
-        sys.exit(1)
-    if (numresults == 0):
-        print("Failed to parse return data from GitHub")
-        sys.exit(1)
-    for res in result['items']:
+    if len(result) == 0:
+        break
+    for res in result:
         repositories.append(res)
+    page = page + 1
 
 def exists_in_tree(lm, path):
     for child in lm.getchildren():
