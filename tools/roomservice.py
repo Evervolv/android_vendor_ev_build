@@ -294,13 +294,10 @@ if depsonly:
 
 else:
     for repository in repositories:
-        repo_name = repository['name']
+        repo_name = repository['name'].replace("_moto_", "_motorola_")
         if re.match(r"^android_device_[^_]*_" + device + "$", repo_name):
             print("Found repository: %s" % repository['name'])
             manufacturer = repo_name.replace("android_device_", "").replace("_" + device, "")
-            if re.match("moto", manufacturer):
-                manufacturer = "motorola"
-
             repo_path = "device/%s/%s" % (manufacturer, device)
 
             add_to_manifest([{'repository':repo_name,
