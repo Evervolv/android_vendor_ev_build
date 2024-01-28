@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # Copyright (C) 2012-2013, The CyanogenMod Project
-#           (C) 2017,      The LineageOS Project
+#           (C) 2017-2018,2020-2021, The LineageOS Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,13 +17,11 @@
 from __future__ import print_function
 
 import base64
-import os
 import json
 import netrc
 import os
 import re
 import sys
-
 try:
   # For python3
   import urllib.error
@@ -41,11 +39,7 @@ except ImportError:
 
 from xml.etree import ElementTree
 
-product = sys.argv[1];
-local_manifests_dir = ".repo/local_manifests"
-dependency_filename = 'ev.dependencies'
-repositories = []
-local_manifests = []
+product = sys.argv[1]
 
 if len(sys.argv) > 2:
     depsonly = sys.argv[2]
@@ -58,25 +52,16 @@ except:
     device = product
 
 if not depsonly:
-    print ("Device %s not found. Attempting to retrieve device repository from Evervolv Github (http://github.com/Evervolv)." % device)
+    print("Device %s not found. Attempting to retrieve device repository from Evervolv Github (http://github.com/Evervolv)." % device)
 
-try: # Convert from depreciated format
-    if not os.path.isdir(local_manifests_dir):
-        os.makedirs(local_manifests_dir)
-    if os.path.exists(".repo/local_manifest.xml"):
-        os.rename(".repo/local_manifest.xml", os.path.join(local_manifests_dir, "deprecated_manifest.xml"))
-except OSError as e:
-    print("Fatal: %s" % e)
-    sys.exit()
-
-# list the currently existing manifests
-local_manifests = os.listdir(local_manifests_dir)
+repositories = []
 
 try:
     authtuple = netrc.netrc().authenticators("api.github.com")
 
     if authtuple:
-        githubauth = base64.encodestring('%s:%s' % (authtuple[0], authtuple[2])).replace('\n', '')
+        auth_string = ('%s:%s' % (authtuple[0], authtuple[2])).encode()
+        githubauth = base64.encodestring(auth_string).decode().replace('\n', '')
     else:
         githubauth = None
 except:
@@ -86,16 +71,22 @@ def add_auth(githubreq):
     if githubauth:
         githubreq.add_header("Authorization","Basic %s" % githubauth)
 
-page = 1
-while not depsonly:
-    githubreq = urllib.request.Request("https://api.github.com/users/Evervolv/repos?per_page=100&page=%d" % page)
+if not depsonly:
+    githubreq = urllib.request.Request("https://api.github.com/search/repositories?q=%s+user:Evervolv+in:name+fork:true" % device)
     add_auth(githubreq)
-    result = json.loads(urllib.request.urlopen(githubreq).read().decode())
-    if len(result) == 0:
-        break
-    for res in result:
+    try:
+        result = json.loads(urllib.request.urlopen(githubreq).read().decode())
+    except urllib.error.URLError:
+        print("Failed to search GitHub")
+        sys.exit(1)
+    except ValueError:
+        print("Failed to parse return data from GitHub")
+        sys.exit(1)
+    for res in result.get('items', []):
         repositories.append(res)
-    page = page + 1
+
+local_manifests = r'.repo/local_manifests'
+if not os.path.exists(local_manifests): os.makedirs(local_manifests)
 
 def exists_in_tree(lm, path):
     for child in lm.getchildren():
@@ -120,9 +111,9 @@ def indent(elem, level=0):
             elem.tail = i
 
 def get_from_manifest(devicename):
-    for manifest in local_manifests:
+    for manifest in os.listdir(".repo/local_manifests"):
         try:
-            lm = ElementTree.parse(os.path.join(local_manifests_dir, manifest))
+            lm = ElementTree.parse(os.path.join(".repo/local_manifests", manifest))
             lm = lm.getroot()
         except:
             lm = ElementTree.Element("manifest")
@@ -134,7 +125,18 @@ def get_from_manifest(devicename):
     return None
 
 def is_in_manifest(projectpath):
-    # Search in main manifest
+    for manifest in os.listdir(".repo/local_manifests"):
+        try:
+            lm = ElementTree.parse(os.path.join(".repo/local_manifests", manifest))
+            lm = lm.getroot()
+        except:
+            lm = ElementTree.Element("manifest")
+
+        for localpath in lm.findall("project"):
+            if localpath.get("path") == projectpath:
+                return True
+
+    # Search in main manifest, too
     try:
         lm = ElementTree.parse(".repo/manifest.xml")
         lm = lm.getroot()
@@ -145,32 +147,10 @@ def is_in_manifest(projectpath):
         if localpath.get("path") == projectpath:
             return True
 
-    # Search in aosp snippet
-    try:
-        lm = ElementTree.parse(".repo/manifests/snippets/aosp.xml")
-        lm = lm.getroot()
-    except:
-        lm = ElementTree.Element("manifest")
-
-    for localpath in lm.findall("project"):
-        if localpath.get("path") == projectpath:
-            return True
-
-    # Search in evervolv snippet
-    try:
-        lm = ElementTree.parse(".repo/manifests/snippets/evervolv.xml")
-        lm = lm.getroot()
-    except:
-        lm = ElementTree.Element("manifest")
-
-    for localpath in lm.findall("project"):
-        if localpath.get("path") == projectpath:
-            return True
-
-    # Search in roomservice manifests
-    for manifest in local_manifests:
+    # ... and don't forget the snippets
+    for snippet in os.listdir(".repo/manifests/snippets"):
         try:
-            lm = ElementTree.parse(os.path.join(local_manifests_dir, manifest))
+            lm = ElementTree.parse(".repo/manifests/snippets/%s.xml" % snippet)
             lm = lm.getroot()
         except:
             lm = ElementTree.Element("manifest")
@@ -181,46 +161,47 @@ def is_in_manifest(projectpath):
 
     return False
 
-def add_to_manifest(repositories):
+def add_to_manifest(repositories, fallback_branch = None):
     for repository in repositories:
         repo_name = repository['repository']
+        repo_target = repository['target_path']
 
         aosp = False
         if ("/" in repo_name):
             aosp = True
+
+        if aosp:
             dep_type = repo_name.split('/')[0]
         else:
             dep_type = repo_name.split('_')[1]
 
-        dep_manifest = os.path.join(local_manifests_dir, "%s" % dep_type + ".xml")
+        dep_manifest = ".repo/local_manifests/%s.xml" % dep_type
         try:
             lm = ElementTree.parse(dep_manifest)
             lm = lm.getroot()
         except:
             lm = ElementTree.Element("manifest")
 
-        repo_target = repository['target_path']
+        print('Checking if %s is fetched from %s' % (repo_target, repo_name))
         if is_in_manifest(repo_target):
             print('%s already fetched to %s' % (repo_name, repo_target))
             continue
 
         print('Adding dependency: %s -> %s' % (repo_name, repo_target))
-        project = ElementTree.Element("project", attrib = {
-            "path": repo_target, "name": "%s" % repo_name
-            })
+        project = ElementTree.Element("project", attrib = { "path": repo_target,
+            "name": "%s" % repo_name })
 
-        # Available remotes are defined in the manifest
-        if aosp:
-            print("Using default remote for %s" % repo_name)
+        if 'remote' in repository:
+            project.set('remote',repository['remote'])
         else:
-            if 'remote' in repository:
-                project.set('remote',repository['remote'])
-            else:
-                project.set('remote',"evervolv")
+            project.set('remote',"evervolv")
 
         if 'branch' in repository:
             project.set('revision',repository['branch'])
-        else:
+        elif fallback_branch:
+            print("Using fallback branch %s for %s" % (fallback_branch, repo_name))
+            project.set('revision', fallback_branch)
+        elif not aosp:
             print("Using default branch for %s" % repo_name)
 
         lm.append(project)
@@ -233,55 +214,45 @@ def add_to_manifest(repositories):
         f.write(raw_xml)
         f.close()
 
-def fetch_repos(repos):
-    '''Adds repo to manifest and syncs'''
+def fetch_dependencies(repo_path, fallback_branch = None):
+    print('Looking for dependencies in %s' % repo_path)
+    dependencies_path = repo_path + '/ev.dependencies'
+    syncable_repos = []
+    verify_repos = []
 
-    fetch_list = []
-    for r in repos:
-        if not is_in_manifest(r.get('target_path')):
-            fetch_list.append(r)
+    if os.path.exists(dependencies_path):
+        dependencies_file = open(dependencies_path, 'r')
+        dependencies = json.loads(dependencies_file.read())
+        fetch_list = []
 
-    if fetch_list:
-        add_to_manifest(fetch_list)
-        repo_paths = ' '.join([ r.get('target_path') for r in fetch_list ])
-        print('Syncing', repo_paths)
-        os.system('repo sync -c --force-sync %s' % repo_paths)
+        for dependency in dependencies:
+            if not is_in_manifest(dependency['target_path']):
+                fetch_list.append(dependency)
+                syncable_repos.append(dependency['target_path'])
+                verify_repos.append(dependency['target_path'])
+            else:
+                verify_repos.append(dependency['target_path'])
 
-def fetch_children(repos):
-    '''Locate any device dependencies'''
+            if not os.path.isdir(dependency['target_path']):
+                syncable_repos.append(dependency['target_path'])
 
-    children = []
-    for r in repos:
-        if r.get('dep_type') == 'device':
-            try:
-                with open(os.path.join(r.get('target_path'),dependency_filename)) as f:
-                    #print r.get('target_path')
-                    children.extend(json.load(f))
-            except IOError:
-                continue
-    fetch_repos(children)
-    return children
+        dependencies_file.close()
 
-def fetch_dependencies(repo_path):
-    '''Add any and all dependencies found'''
+        if len(fetch_list) > 0:
+            print('Adding dependencies to manifest')
+            add_to_manifest(fetch_list, fallback_branch)
+    else:
+        print('%s has no additional dependencies.' % repo_path)
 
-    dependencies = []
+    if len(syncable_repos) > 0:
+        print('Syncing dependencies')
+        os.system('repo sync --force-sync %s' % ' '.join(syncable_repos))
 
-    try:
-        with open(os.path.join(repo_path,dependency_filename)) as f:
-            dependencies = json.load(f)
-    except IOError as e:
-        print(e)
+    for deprepo in verify_repos:
+        fetch_dependencies(deprepo)
 
-    # Fetch toplevel dependencies
-    fetch_repos(dependencies)
-
-    # Locate any extra dependencies
-    children = dependencies
-    while True:
-        children = fetch_children(children)
-        if not children:
-            break
+def has_branch(branches, revision):
+    return revision in [branch['name'] for branch in branches]
 
 if depsonly:
     repo_path = get_from_manifest(device)
@@ -296,13 +267,12 @@ else:
     for repository in repositories:
         repo_name = repository['name'].replace("_moto_", "_motorola_")
         if re.match(r"^android_device_[^_]*_" + device + "$", repo_name):
-            print("Found repository: %s" % repository['name'])
+            print("Found repository: %s" % repo_name)
             manufacturer = repo_name.replace("android_device_", "").replace("_" + device, "")
             repo_path = "device/%s/%s" % (manufacturer, device)
 
-            add_to_manifest([{'repository':repo_name,
-                              'target_path':repo_path,
-                              'dep_type':'device'}])
+            adding = {'repository':repo_name,'target_path':repo_path}
+            add_to_manifest([adding])
 
             print("Syncing repository to retrieve project.")
             os.system('repo sync -c --force-sync %s' % repo_path)
