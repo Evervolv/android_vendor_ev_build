@@ -59,7 +59,7 @@ def fetch_query_via_ssh(remote_url, query):
     elif remote_url.count(":") == 1:
         (_, userhost) = remote_url.split(":")
         userhost = userhost[2:]
-        port = "29418"
+        port = "8082"
     else:
         raise Exception("Malformed URI: Expecting ssh://[user@]host[:port]")
 
@@ -184,9 +184,9 @@ def is_closed(status):
     return status not in ("OPEN", "NEW", "DRAFT")
 
 
-def is_lineage_gerrit(remote_url):
+def is_evervolv_gerrit(remote_url):
     p = urllib.parse.urlparse(remote_url)
-    return p.hostname == "review.lineageos.org"
+    return p.hostname == "review.evervolv.com"
 
 
 def commit_exists(project_path, revision):
@@ -206,7 +206,7 @@ def main():
         description=textwrap.dedent(
             """\
         repopick.py is a utility to simplify the process of cherry picking
-        patches from LineageOS's Gerrit instance (or any gerrit instance of your choosing)
+        patches from Evervolv's Gerrit instance (or any gerrit instance of your choosing)
 
         Given a list of change numbers, repopick will cd into the project path
         and cherry pick the latest patch available.
@@ -287,7 +287,7 @@ def main():
     parser.add_argument(
         "-g",
         "--gerrit",
-        default="https://review.lineageos.org",
+        default="https://review.evervolv.com",
         metavar="",
         help="Gerrit Instance to use. Form proto://[user@]host[:port]",
     )
@@ -640,12 +640,12 @@ def do_git_fetch_pull(args, item):
         cmd.append("--quiet")
     cmd.extend(["", item["fetch"][method]["ref"]])
 
-    # Try fetching from GitHub first if using lineage gerrit
-    if is_lineage_gerrit(args.gerrit):
+    # Try fetching from Evervolv first if using lineage gerrit
+    if is_evervolv_gerrit(args.gerrit):
         if args.verbose:
-            print("Trying to fetch the change from GitHub")
+            print("Trying to fetch the change from Evervolv")
 
-        cmd[-2] = "github"
+        cmd[-2] = "evervolv"
         if not args.quiet:
             print(cmd)
         result = subprocess.call(cmd, cwd=project_path)
@@ -654,11 +654,11 @@ def do_git_fetch_pull(args, item):
             return
         print("ERROR: git command failed")
 
-    # If not using the lineage gerrit or github failed, fetch from gerrit.
+    # If not using the lineage gerrit or evervolv failed, fetch from gerrit.
     if args.verbose:
-        if is_lineage_gerrit(args.gerrit):
+        if is_evervolv_gerrit(args.gerrit):
             print(
-                "Fetching from GitHub didn't work, trying to fetch the change from Gerrit"
+                "Fetching from Evervolv didn't work, trying to fetch the change from Gerrit"
             )
         else:
             print("Fetching from {0}".format(args.gerrit))
