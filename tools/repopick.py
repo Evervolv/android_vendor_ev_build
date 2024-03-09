@@ -71,7 +71,7 @@ def fetch_query_via_ssh(remote_url, query):
     elif remote_url.count(':') == 1:
         (uri, userhost) = remote_url.split(':')
         userhost = userhost[2:]
-        port = 8082
+        port = 29418
     else:
         raise Exception('Malformed URI: Expecting ssh://[user@]host[:port]')
 
@@ -153,12 +153,12 @@ def fetch_query(remote_url, query):
         raise Exception('Gerrit URL should be in the form http[s]://hostname/ or ssh://[user@]host[:port]')
 
 if __name__ == '__main__':
-    # Default to Evervolv Gerrit
-    default_gerrit = 'http://review.evervolv.com/'
+    # Default to LineageOS Gerrit
+    default_gerrit = 'http://review.lineageos.org'
 
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, description=textwrap.dedent('''\
         repopick.py is a utility to simplify the process of cherry picking
-        patches from Evervolv's Gerrit instance (or any gerrit instance of your choosing)
+        patches from LineageOS's Gerrit instance (or any gerrit instance of your choosing)
 
         Given a list of change numbers, repopick will cd into the project path
         and cherry pick the latest patch available.
@@ -423,15 +423,15 @@ if __name__ == '__main__':
         else:
             method = 'ssh'
 
-        # Try fetching from Evervolv first if using default gerrit
+        # Try fetching from GitHub first if using default gerrit
         if args.gerrit == default_gerrit:
             if args.verbose:
-                print('Trying to fetch the change from Evervolv')
+                print('Trying to fetch the change from GitHub')
 
             if args.pull:
-                cmd = ['git pull --no-edit evervolv', item['fetch'][method]['ref']]
+                cmd = ['git pull --no-edit github', item['fetch'][method]['ref']]
             else:
-                cmd = ['git fetch evervolv', item['fetch'][method]['ref']]
+                cmd = ['git fetch github', item['fetch'][method]['ref']]
             if args.quiet:
                 cmd.append('--quiet')
             else:
@@ -443,10 +443,10 @@ if __name__ == '__main__':
                 sys.exit(result)
         # Check if it worked
         if args.gerrit != default_gerrit or os.stat(FETCH_HEAD).st_size == 0:
-            # If not using the default gerrit or evervolv failed, fetch from gerrit.
+            # If not using the default gerrit or github failed, fetch from gerrit.
             if args.verbose:
                 if args.gerrit == default_gerrit:
-                    print('Fetching from Evervolv didn\'t work, trying to fetch the change from Gerrit')
+                    print('Fetching from GitHub didn\'t work, trying to fetch the change from Gerrit')
                 else:
                     print('Fetching from {0}'.format(args.gerrit))
 
