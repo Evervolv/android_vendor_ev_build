@@ -483,3 +483,7 @@ function update_aosp_tag() # <Tag>
 
 # Add hooks from repo
 git config --global core.hooksPath $(gettop)/.repo/repo/hooks
+
+# Override host metadata to make builds more reproducible and avoid leaking info
+export BUILD_USERNAME=nobody
+export BUILD_HOSTNAME=android-build
