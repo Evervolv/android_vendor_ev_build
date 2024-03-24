@@ -20,7 +20,6 @@ PRODUCT_MAKEFILES := \
     $(LOCAL_DIR)/ev_gsi_x86.mk \
     $(LOCAL_DIR)/ev_gsi_x86_64.mk \
     $(LOCAL_DIR)/ev_sdk_phone_arm64.mk \
-    $(LOCAL_DIR)/ev_sdk_phone_x86.mk \
     $(LOCAL_DIR)/ev_sdk_phone_x86_64.mk
 
 COMMON_LUNCH_CHOICES := \
@@ -29,5 +28,4 @@ COMMON_LUNCH_CHOICES := \
     ev_gsi_x86-userdebug \
     ev_gsi_x86_64-userdebug \
     ev_sdk_phone_arm64-userdebug \
-    ev_sdk_phone_x86-userdebug \
     ev_sdk_phone_x86_64-userdebug
