@@ -14,13 +14,6 @@
 # limitations under the License.
 
 # -----------------------------------------------------------------
-# Retrofit update package
-ifeq ($(BOARD_BUILD_RETROFIT_DYNAMIC_PARTITIONS_OTA_PACKAGE),true)
-INTERNAL_PACKAGE_TARGET := $(INTERNAL_OTA_RETROFIT_DYNAMIC_PARTITIONS_PACKAGE_TARGET)
-else
-INTERNAL_PACKAGE_TARGET := $(INTERNAL_OTA_PACKAGE_TARGET)
-endif
-
 # Bacon update package
 ifneq ($(TARGET_OTA_PACKAGE_NAME),)
 OTA_PACKAGE_NAME := $(shell echo ${TARGET_OTA_PACKAGE_NAME} | tr [:upper:] [:lower:])
@@ -33,7 +26,7 @@ INTERNAL_BACON_PACKAGE := $(PRODUCT_OUT)/$(OTA_PACKAGE_NAME).zip
 MD5 := prebuilts/build-tools/path/$(HOST_PREBUILT_TAG)/md5sum
 
 .PHONY: bacon
-bacon: $(DEFAULT_GOAL) $(INTERNAL_PACKAGE_TARGET)
-	$(hide) ln -f $(INTERNAL_PACKAGE_TARGET) $(INTERNAL_BACON_PACKAGE)
+bacon: $(DEFAULT_GOAL) $(INTERNAL_OTA_PACKAGE_TARGET)
+	$(hide) ln -f $(INTERNAL_OTA_PACKAGE_TARGET) $(INTERNAL_BACON_PACKAGE)
 	$(hide) $(MD5) $(INTERNAL_BACON_PACKAGE) | sed "s|$(PRODUCT_OUT)/||" > $(INTERNAL_BACON_PACKAGE).md5sum
 	@echo "Package Complete: $(INTERNAL_BACON_PACKAGE)" >&2
