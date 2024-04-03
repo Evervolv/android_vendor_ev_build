@@ -108,7 +108,7 @@ function cafremote()
     # Google moved the repo location in Oreo
     if [ $PROJECT = "build/make" ]
     then
-        PROJECT="build"
+        PROJECT="build_repo"
     fi
     if [[ $PROJECT =~ "qcom/opensource" ]];
     then
