@@ -54,6 +54,7 @@ SOONG_CONFIG_NAMESPACES += evervolvQcomVars
 SOONG_CONFIG_evervolvQcomVars += \
     gralloc_handle_has_custom_content_md_reserved_size \
     gralloc_handle_has_reserved_size \
+    gralloc_handle_has_ubwcp_format \
     qti_vibrator_effect_lib \
     qti_vibrator_use_effect_stream \
     supports_audio_accessory \
