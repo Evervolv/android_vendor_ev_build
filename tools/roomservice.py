@@ -64,7 +64,7 @@ if not depsonly:
     githubreq = urllib.request.Request("https://api.github.com/search/repositories?q=%s+user:Evervolv+in:name+fork:true" % device)
     add_auth(githubreq)
     try:
-        result = json.loads(urllib.request.urlopen(githubreq).read().decode())
+        result = json.loads(urllib.request.urlopen(githubreq, timeout=10).read().decode())
     except urllib.error.URLError:
         print("Failed to search GitHub")
         sys.exit(1)
