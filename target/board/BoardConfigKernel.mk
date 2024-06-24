@@ -27,7 +27,7 @@
 #                                                      x86_64-linux-android- for x86
 #
 #   TARGET_KERNEL_LLVM_BINUTILS        = Use LLVM's substitutes for GNU binutils, defaults to false
-#
+#   TARGET_KERNEL_RUST_VERSION         = Rust prebuilts version, optional
 #   TARGET_KERNEL_NO_GCC               = Fully compile the kernel without GCC.
 #                                        Defaults to false
 #
@@ -217,11 +217,15 @@ endif
 
 KERNEL_CROSS_COMPILE += $(KERNEL_CC)
 
+# Rust
+TARGET_KERNEL_RUST_VERSION ?= 1.73.0c
+TARGET_KERNEL_RUST_PATH ?= $(BUILD_TOP)/prebuilts/rust/$(HOST_PREBUILT_TAG)/$(TARGET_KERNEL_RUST_VERSION)
+
 # Set paths for prebuilt tools
 SYSTEM_TOOLS := $(BUILD_TOP)/prebuilts/build-tools
 EXTRA_TOOLS := $(BUILD_TOP)/prebuilts/evervolv-tools
 
-KERNEL_TOOLS := $(EXTRA_TOOLS)/$(HOST_PREBUILT_TAG)/bin:$(TARGET_KERNEL_CLANG_PATH)/bin
+KERNEL_TOOLS := $(EXTRA_TOOLS)/$(HOST_PREBUILT_TAG)/bin:$(TARGET_KERNEL_RUST_PATH)/bin:$(TARGET_KERNEL_CLANG_PATH)/bin
 KERNEL_LD_LIBRARY := $(EXTRA_TOOLS)/$(HOST_PREBUILT_TAG)/lib:$(TARGET_KERNEL_CLANG_PATH)/lib64
 
 TOOLS_PATH_OVERRIDE := \
