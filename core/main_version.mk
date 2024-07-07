@@ -1,12 +1,9 @@
 # Build information
 PRODUCT_BUILD ?= userbuild
-ifneq ($(filter nightly testing release,$(PRODUCT_BUILD)),)
-ADDITIONAL_SYSTEM_PROPERTIES += \
-    ro.evervolv.releasetype=$(PRODUCT_BUILD)
-endif
 
 ADDITIONAL_SYSTEM_PROPERTIES += \
     ro.evervolv.device=$(TARGET_DEVICE) \
+    ro.evervolv.releasetype=$(PRODUCT_BUILD) \
     ro.evervolv.version=$(PLATFORM_VERSION)
 
 # SDK
