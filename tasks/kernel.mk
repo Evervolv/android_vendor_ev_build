@@ -32,6 +32,7 @@
 #   BOARD_KERNEL_IMAGE_NAME            = Built image name
 #                                          for ARM use: zImage
 #                                          for ARM64 use: Image.gz
+#                                          for x86 use: bzImage
 #                                          for uncompressed use: Image
 #                                          If using an appended DT, append '-dtb'
 #                                          to the end of the image name.
@@ -444,7 +445,7 @@ endif
 $(TARGET_PREBUILT_INT_KERNEL): $(KERNEL_CONFIG) $(DEPMOD) $(DTC) $(LZ4)
 	@echo "Building Kernel Image ($(KERNEL_IMAGE_NAME))"
 	$(call make-kernel-target,$(KERNEL_IMAGE_NAME))
-	$(hide) if grep -q '^CONFIG_OF=y' $(KERNEL_CONFIG); then \
+	$(hide) if [ -d "$(KERNEL_SRC)/arch/$(KERNEL_ARCH)/boot/dts/" ]; then \
 			echo "Building DTBs"; \
 			$(call make-kernel-target,dtbs); \
 		fi
