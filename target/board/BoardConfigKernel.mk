@@ -171,21 +171,23 @@ ifneq ($(TARGET_KERNEL_LLVM_BINUTILS),true)
     KERNEL_CLANG_VERSION := r416183b
 else
     ifneq ($(KERNEL_VERSION),)
-        ifeq ($(shell expr $(KERNEL_VERSION) \== 5), 1)
+        ifeq ($(shell expr $(KERNEL_VERSION) \== 6), 1)
+            ifeq ($(shell expr $(KERNEL_PATCHLEVEL) \< 6), 1)
+                KERNEL_CLANG_VERSION := r487747c
+            endif
+        else ifeq ($(shell expr $(KERNEL_VERSION) \== 5), 1)
             ifeq ($(shell expr $(KERNEL_PATCHLEVEL) \>= 15), 1)
                 KERNEL_CLANG_VERSION := r487747c
             endif
         endif
-        ifeq ($(shell expr $(KERNEL_VERSION) \== 6), 1)
-            ifeq ($(shell expr $(KERNEL_PATCHLEVEL) \>= 6), 1)
-                KERNEL_CLANG_VERSION := r498229b
-            else
-                KERNEL_CLANG_VERSION := r487747c
+        ifeq ($(KERNEL_CLANG_VERSION),)
+            ifeq ($(shell expr $(KERNEL_VERSION) \< 6), 1)
+                KERNEL_CLANG_VERSION := r450784e
             endif
         endif
     endif
 endif
-KERNEL_CLANG_VERSION ?= r450784e
+KERNEL_CLANG_VERSION ?= r498229b
 TARGET_KERNEL_CLANG_VERSION ?= $(KERNEL_CLANG_VERSION)
 
 ifneq ($(wildcard $(BUILD_TOP)/prebuilts/evervolv-tools/$(HOST_PREBUILT_TAG)/clang-$(TARGET_KERNEL_CLANG_VERSION)/bin/clang),)
