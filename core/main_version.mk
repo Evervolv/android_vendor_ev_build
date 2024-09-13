@@ -1,18 +1,8 @@
 # Build information
+ifneq ($(EV_PRODUCT_BUILD),)
+PRODUCT_BUILD := $(EV_PRODUCT_BUILD)
+endif
 PRODUCT_BUILD ?= userbuild
-
-ADDITIONAL_SYSTEM_PROPERTIES += \
-    ro.evervolv.device=$(TARGET_DEVICE) \
-    ro.evervolv.releasetype=$(PRODUCT_BUILD) \
-    ro.evervolv.version=$(PLATFORM_VERSION)
-
-# SDK
-EV_PLATFORM_SDK_VERSION ?= 4
-EV_PLATFORM_REV ?= 0
-
-ADDITIONAL_SYSTEM_PROPERTIES += \
-    ro.evervolv.build.version.plat.sdk=$(EV_PLATFORM_SDK_VERSION) \
-    ro.evervolv.build.version.plat.rev=$(EV_PLATFORM_REV)
 
 # Package name
 ifneq ($(SKIP_VERBOSE_DATE),true)
