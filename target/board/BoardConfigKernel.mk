@@ -169,12 +169,23 @@ endif
 # LLVM
 ifneq ($(KERNEL_VERSION),)
     ifeq ($(shell expr $(KERNEL_VERSION) \== 6), 1)
-        ifeq ($(shell expr $(KERNEL_PATCHLEVEL) \< 6), 1)
-            KERNEL_CLANG_VERSION := r487747c
+        ifeq ($(shell expr $(KERNEL_PATCHLEVEL) \<= 6), 1)
+            KERNEL_CLANG_VERSION := r498229b
         endif
-    else ifeq ($(shell expr $(KERNEL_VERSION) \== 5), 1)
-        ifeq ($(shell expr $(KERNEL_PATCHLEVEL) \>= 15), 1)
-            KERNEL_CLANG_VERSION := r487747c
+    endif
+    ifeq ($(KERNEL_CLANG_VERSION),)
+        ifeq ($(shell expr $(KERNEL_VERSION) \== 5), 1)
+            ifeq ($(shell expr $(KERNEL_PATCHLEVEL) \>= 15), 1)
+                KERNEL_CLANG_VERSION := r498229b
+            else
+                KERNEL_CLANG_VERSION := r450784e
+            endif
+        else ifeq ($(shell expr $(KERNEL_VERSION) \< 5), 1)
+            ifneq ($(TARGET_KERNEL_LLVM_BINUTILS),true)
+                KERNEL_CLANG_VERSION := r416183b
+            else
+                KERNEL_CLANG_VERSION := r450784e
+            endif
         endif
     endif
     ifeq ($(KERNEL_CLANG_VERSION),)
@@ -187,7 +198,7 @@ ifneq ($(KERNEL_VERSION),)
         endif
     endif
 endif
-KERNEL_CLANG_VERSION ?= r498229b
+KERNEL_CLANG_VERSION ?= r522817
 
 ifneq ($(TARGET_KERNEL_CLANG_VERSION),)
 TARGET_KERNEL_CLANG_VERSION := clang-$(TARGET_KERNEL_CLANG_VERSION)
