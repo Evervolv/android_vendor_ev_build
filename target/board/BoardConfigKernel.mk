@@ -167,34 +167,37 @@ ifneq ($(TARGET_KERNEL_NO_GCC),true)
 endif
 
 # LLVM
-ifneq ($(TARGET_KERNEL_LLVM_BINUTILS),true)
-    KERNEL_CLANG_VERSION := r416183b
-else
-    ifneq ($(KERNEL_VERSION),)
-        ifeq ($(shell expr $(KERNEL_VERSION) \== 6), 1)
-            ifeq ($(shell expr $(KERNEL_PATCHLEVEL) \< 6), 1)
-                KERNEL_CLANG_VERSION := r487747c
-            endif
-        else ifeq ($(shell expr $(KERNEL_VERSION) \== 5), 1)
-            ifeq ($(shell expr $(KERNEL_PATCHLEVEL) \>= 15), 1)
-                KERNEL_CLANG_VERSION := r487747c
-            endif
+ifneq ($(KERNEL_VERSION),)
+    ifeq ($(shell expr $(KERNEL_VERSION) \== 6), 1)
+        ifeq ($(shell expr $(KERNEL_PATCHLEVEL) \< 6), 1)
+            KERNEL_CLANG_VERSION := r487747c
         endif
-        ifeq ($(KERNEL_CLANG_VERSION),)
-            ifeq ($(shell expr $(KERNEL_VERSION) \< 6), 1)
+    else ifeq ($(shell expr $(KERNEL_VERSION) \== 5), 1)
+        ifeq ($(shell expr $(KERNEL_PATCHLEVEL) \>= 15), 1)
+            KERNEL_CLANG_VERSION := r487747c
+        endif
+    endif
+    ifeq ($(KERNEL_CLANG_VERSION),)
+        ifeq ($(shell expr $(KERNEL_VERSION) \< 6), 1)
+            ifneq ($(TARGET_KERNEL_LLVM_BINUTILS),true)
+                KERNEL_CLANG_VERSION := r416183b
+            else
                 KERNEL_CLANG_VERSION := r450784e
             endif
         endif
     endif
 endif
 KERNEL_CLANG_VERSION ?= r498229b
-TARGET_KERNEL_CLANG_VERSION ?= $(KERNEL_CLANG_VERSION)
 
-ifneq ($(wildcard $(BUILD_TOP)/prebuilts/evervolv-tools/$(HOST_PREBUILT_TAG)/clang-$(TARGET_KERNEL_CLANG_VERSION)/bin/clang),)
-    TARGET_KERNEL_CLANG_PATH ?= $(BUILD_TOP)/prebuilts/evervolv-tools/$(HOST_PREBUILT_TAG)/clang-$(TARGET_KERNEL_CLANG_VERSION)
-else
-    TARGET_KERNEL_CLANG_PATH ?= $(BUILD_TOP)/prebuilts/clang/host/$(HOST_PREBUILT_TAG)/clang-$(TARGET_KERNEL_CLANG_VERSION)
+ifneq ($(TARGET_KERNEL_CLANG_VERSION),)
+TARGET_KERNEL_CLANG_VERSION := clang-$(TARGET_KERNEL_CLANG_VERSION)
 endif
+TARGET_KERNEL_CLANG_VERSION ?= clang-$(KERNEL_CLANG_VERSION)
+
+ifneq ($(filter r416183b r450784e, $(KERNEL_CLANG_VERSION)),)
+    TARGET_KERNEL_CLANG_PATH := $(BUILD_TOP)/prebuilts/evervolv-tools/$(HOST_PREBUILT_TAG)/$(TARGET_KERNEL_CLANG_VERSION)
+endif
+TARGET_KERNEL_CLANG_PATH ?= $(BUILD_TOP)/prebuilts/clang/host/$(HOST_PREBUILT_TAG)/$(TARGET_KERNEL_CLANG_VERSION)
 
 ifneq ($(TARGET_KERNEL_NO_GCC),true)
     ifeq ($(KERNEL_ARCH),arm64)
