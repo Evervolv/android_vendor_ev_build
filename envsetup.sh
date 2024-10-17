@@ -464,42 +464,176 @@ function fixup_common_out_dir() {
     fi
 }
 
-function update_aosp_tag() # <Tag>
+function update_aosp_manifest() # <Tag> <sync jobs>
 {
     if [ -z "$1" ]; then
         echo "Usage: update_aosp_tag <aosp-tag>"
-        return
+        return 1
     fi
 
-    T=$(gettop)
-    cd $T/.repo/manifests
-    git pull https://android.googlesource.com/platform/manifest refs/tags/$1
+    local tag="$1"
+    local top_dir=$(gettop)
+    local manifest_dir="$top_dir/.repo/manifests"
+
+    cd "$manifest_dir" || return 1
+    git pull https://android.googlesource.com/platform/manifest $tag
 
     echo "Correct any errors to the manifest, press 'c' to continue"
     read -n 1 k <&1
-    if [[ $k = c ]] ; then
-        echo "Sync the updated manifest"
-        cd $T
-        repo sync -c --force-sync
+    if [[ "$k" != "c" ]]; then
+        echo "Operation canceled."
+        return 1
+    fi
 
-        echo "Start pulling updates to our forked repos"
-        local AOSP_REPOS=$(cat $T/android/snippets/aosp.xml | grep 'remote="evervolv"' | awk '{print $2}' | awk -F '"' '{print $2}')
-        for dir in ${AOSP_REPOS}; do
-            cd $T/${dir}
-            case ${dir} in
-            prebuilts/* | packages/apps/Gallery2)
-            ;;
+    echo "Syncing the updated manifest..."
+    cd "$top_dir" || return 1
+    repo sync -c --force-sync
+}
+
+function update_aosp_forks() # <Tag> <max_jobs> [--dump-to-file <path/filename>]
+{
+    if [ -z "$1" ]; then
+        echo "Usage: update_aosp_forks <aosp-tag> [<max_jobs>] [--dump-to-file <path/filename>]"
+        return 1
+    fi
+
+    local tag="$1"
+    local top_dir=$(gettop)
+    local aosp_repos_file="$top_dir/.repo/manifests/snippets/aosp.xml"
+    local job_count=0
+    local max_jobs=$2
+    local merge_repo_file="/tmp/merge_repos.txt"
+    local dump_to_file=""
+
+    if [ -z "$2" ]; then
+        max_jobs=64
+    fi
+
+    # Check for additional arguments
+    shift 2
+    while [[ "$#" -gt 0 ]]; do
+        case "$1" in
+            --dump-to-file)
+                dump_to_file="$2"
+                shift 2
+                ;;
             *)
-                aospremote
-                git pull aosp refs/tags/$1
-            ;;
-            esac
+                shift
+                ;;
+        esac
+    done
+
+    declare -A skip_repos
+    skip_list_file="$top_dir/vendor/ev/build/config/repo_skip_list.txt"  # Updated to use a valid variable name
+
+    # Load skip list if provided
+    if [ -n "$skip_list_file" ] && [ -f "$skip_list_file" ]; then
+        while IFS=" - " read -r repo_pattern _ || [[ -n "$repo_pattern" ]]; do
+            # Trim any leading/trailing whitespace from repo_pattern
+            repo_pattern=$(echo "$repo_pattern" | xargs)
+            skip_repos["$repo_pattern"]=1  # Store only the repo pattern in the array
+        done < "$skip_list_file"
+    fi
+
+    echo "Starting to pull updates to our forked repos..."
+    local aosp_repos=$(grep 'remote="evervolv"' "$aosp_repos_file" | awk '{print $2}' | awk -F '"' '{print $2}')
+
+    for dir in ${aosp_repos}; do
+        cd "$top_dir/$dir" || continue  # Use continue to skip this iteration if cd fails
+
+        # Flag to check if the current repo should be skipped
+        skip_repo=false
+
+        # Check if repo matches a skip pattern in the skip list
+        for repo_pattern in "${!skip_repos[@]}"; do
+            if [[ "$dir" == $repo_pattern ]]; then
+                echo "$dir - SKIPPED" >> "$merge_repo_file"
+                continue 2
+            fi
         done
 
-        echo "Update complete, fix any conflicts present after merging"
-        cd $T
-        return
+        # If repo is not skipped, proceed with the pull operation
+        aospremote
+
+        # Attempt to pull from the AOSP tag
+        if git pull aosp "$tag" --no-edit; then
+            # Check if there was a merge and if it was clean
+            if git log -1 | grep -q "Merge tag '$tag'"; then
+                echo "Clean merge for repo: $dir"
+                echo "$dir - CLEAN" >> "$merge_repo_file"
+            fi
+        else
+            # If git pull failed, log it as a conflict
+            echo "Merge conflict or issue for repo: $dir"
+            echo "$dir - CONFLICT" >> "$merge_repo_file"
+        fi
+    done
+
+    wait
+
+    echo "Update complete."
+
+    # Now read and categorize the merge results
+    echo "Categorizing merge results..."
+
+    # Arrays for different categories
+    local clean_repos=()
+    local conflict_repos=()
+    local skipped_repos=()
+
+    while IFS= read -r line; do
+        case "$line" in
+            *CLEAN*)
+                clean_repos+=("${line/- CLEAN/}")
+            ;;
+            *CONFLICT*)
+                conflict_repos+=("${line/- CONFLICT/}")
+            ;;
+            *SKIPPED*)
+                skipped_repos+=("${line/- SKIPPED/}")
+            ;;
+        esac
+    done < "$merge_repo_file"
+
+    # Clear the merge file
+    : > "$merge_repo_file"
+
+    print_category() {
+        local category_name="$1"
+        shift
+        local repos=("$@")
+
+        echo "" | tee -a "$merge_repo_file"
+        if [ ${#repos[@]} -ne 0 ]; then
+            echo "Repositories with $category_name merges:" | tee -a "$merge_repo_file"
+            for repo in "${repos[@]}"; do
+                echo "$repo" | tee -a "$merge_repo_file"
+            done
+        else
+            echo "No $category_name merges detected." | tee -a "$merge_repo_file"
+        fi
+    }
+
+    # Print categorized results
+    print_category "CONFLICT" "${conflict_repos[@]}"
+    echo "------------------------------------------------ " | tee -a "$merge_repo_file"
+    print_category "SKIPPED" "${skipped_repos[@]}"
+    echo "------------------------------------------------ " | tee -a "$merge_repo_file"
+    print_category "CLEAN" "${clean_repos[@]}"
+    echo "------------------------------------------------ " | tee -a "$merge_repo_file"
+
+    # If dump_to_file is set, copy the merge results to the specified file
+    if [ -n "$dump_to_file" ]; then
+        cp "$merge_repo_file" "$dump_to_file"
+        echo "Merge results have been copied to $dump_to_file"
     fi
+
+    # Clean up the temporary file
+    rm -f "$merge_repo_file"
+
+    cd "$top_dir"
+    return 0
+
 }
 
 # Add hooks from repo
