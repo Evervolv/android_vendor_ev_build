@@ -35,6 +35,7 @@ function breakfast()
 {
     local target=$1
     local variant=$2
+    source ${ANDROID_BUILD_TOP}/vendor/ev/vars/aosp_target_release
 
     if [ $# -eq 0 ]; then
         # No arguments, so display the full menu
@@ -52,11 +53,9 @@ function breakfast()
                 ;;
         esac
 
-        local release=$(cat vendor/ev/vars/aosp_target_release 2>/dev/null)
-
         # Run roomservice.py only if the target starts with 'ev_'
         if [[ "$target" =~ ^ev_ ]]; then
-            local available=$(TARGET_PRODUCT=$target TARGET_RELEASE=$release TARGET_BUILD_VARIANT= TARGET_BUILD_TYPE= TARGET_BUILD_APPS= _get_build_var_cached TARGET_DEVICE 2>/dev/null)
+            local available=$(TARGET_PRODUCT=$target TARGET_RELEASE=$aosp_target_release TARGET_BUILD_VARIANT= TARGET_BUILD_TYPE= TARGET_BUILD_APPS= _get_build_var_cached TARGET_DEVICE 2>/dev/null)
             vendor/ev/build/tools/roomservice.py $target $([[ -n "$available" ]] && echo true)
         fi
 
@@ -66,7 +65,7 @@ function breakfast()
         else
             # Default to 'userdebug' if no variant specified
             variant=${variant:-"userdebug"}
-            lunch $target-$release-$variant
+            lunch $target-$aosp_target_release-$variant
         fi
     fi
     return $?
