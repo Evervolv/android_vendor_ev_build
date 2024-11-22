@@ -28,7 +28,6 @@ $(foreach v,$(EXPORT_TO_SOONG),$(eval $(call addVar,$(v))))
 
 SOONG_CONFIG_NAMESPACES += evervolvGlobalVars
 SOONG_CONFIG_evervolvGlobalVars += \
-    aapt_version_code \
     additional_gralloc_10_usage_bits \
     bootloader_message_offset \
     disable_postrender_cleanup \
@@ -93,7 +92,6 @@ TARGET_QTI_USB_SUPPORTS_AUDIO_ACCESSORY ?= false
 TARGET_QTI_USB_SUPPORTS_DEBUG_ACCESSORY ?= false
 
 # Soong bool variables
-SOONG_CONFIG_evervolvGlobalVars_aapt_version_code := $(shell date -u +%Y%m%d)
 SOONG_CONFIG_evervolvGlobalVars_disable_postrender_cleanup := $(TARGET_DISABLE_POSTRENDER_CLEANUP)
 SOONG_CONFIG_evervolvGlobalVars_has_legacy_camera_hal1 := $(TARGET_HAS_LEGACY_CAMERA_HAL1)
 SOONG_CONFIG_evervolvGlobalVars_has_memfd_backport := $(TARGET_HAS_MEMFD_BACKPORT)
