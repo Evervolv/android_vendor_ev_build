@@ -295,14 +295,6 @@ ifeq ($(TARGET_KERNEL_LLVM_BINUTILS),true)
     endif
 endif
 
-KERNEL_BUILD_TOOLS += \
-    $(CORE_MAKE_FLAGS) \
-    $(LEGACY_KERNEL_MAKE_FLAGS) \
-    $(LLVM_KERNEL_MAKE_FLAGS) \
-    HOSTLD=$(TARGET_KERNEL_CLANG_PATH)/bin/ld.lld \
-    HOSTAR=$(TARGET_KERNEL_CLANG_PATH)/bin/llvm-ar \
-    REAL_CC=$(TARGET_KERNEL_CLANG_PATH)/bin/clang
-
 # Add back threads, ninja cuts this to $(nproc)/2
 KERNEL_MAKE_FLAGS += -j$(shell $(EXTRA_TOOLS)/$(HOST_PREBUILT_TAG)/bin/nproc --all)
 
