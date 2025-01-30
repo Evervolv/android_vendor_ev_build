@@ -45,9 +45,6 @@
 #
 #   BOARD_KERNEL_LZ4_COMP_FLAGS        = Compression flags for KERNEL_IMAGE_NAME outside of the kernel build
 #
-#   BOARD_KERNEL_LEGACY_DTB_APPEND     = Use cat to append the dtb file to the kernel image.
-#                                          MUST define TARGET_KERNEL_DTB.
-#
 #   BOARD_DTB_CFG                      = Path to a mkdtboimg.py config file for dtb.img
 #
 #   BOARD_DTBO_CFG                     = Path to a mkdtboimg config file
@@ -126,13 +123,6 @@ ifneq ($(filter Image.lz4,$(BOARD_KERNEL_IMAGE_NAME)),)
     ifeq ($(BOARD_KERNEL_LZ4_COMPRESSION),true)
         KERNEL_IMAGE_NAME := Image
         BOARD_KERNEL_LZ4_COMP_FLAGS ?= -l -f -12 --favor-decSpeed
-    endif
-else ifneq ($(filter %-dtb,$(BOARD_KERNEL_IMAGE_NAME)),)
-    ifeq ($(BOARD_KERNEL_LEGACY_DTB_APPEND),true)
-        ifeq ($(TARGET_KERNEL_DTB),)
-            $(error TARGET_KERNEL_DTB not defined.)
-        endif
-        KERNEL_IMAGE_NAME := $(subst -dtb,$(empty),$(BOARD_KERNEL_IMAGE_NAME))
     endif
 endif
 KERNEL_IMAGE_NAME ?= $(BOARD_KERNEL_IMAGE_NAME)
@@ -544,10 +534,6 @@ ifeq ($(strip $(BOARD_KERNEL_LZ4_COMPRESSION)),true)
 	@echo "Compressing Kernel Image ($(BOARD_KERNEL_IMAGE_NAME))"
 	$(hide) $(LZ4) $(BOARD_KERNEL_LZ4_COMP_FLAGS) $(KERNEL_OUT)/arch/$(KERNEL_ARCH)/boot/$(KERNEL_IMAGE_NAME) $@
 endif
-ifeq ($(strip $(BOARD_KERNEL_LEGACY_DTB_APPEND)),true)
-	@echo "Appending DTB to Kernel Image ($(BOARD_KERNEL_IMAGE_NAME))"
-	$(hide) cat $(KERNEL_OUT)/arch/$(KERNEL_ARCH)/boot/$(KERNEL_IMAGE_NAME) $(KERNEL_OUT)/arch/$(KERNEL_ARCH)/boot/dts/$(TARGET_KERNEL_DTB) > $@
-endif
 
 .PHONY: kerneltags
 kerneltags: $(KERNEL_CONFIG)
@@ -663,14 +649,6 @@ $(TARGET_PREBUILT_INT_RECOVERY_KERNEL): $(RECOVERY_KERNEL_CONFIG) $(DEPMOD) $(DT
 ifeq ($(strip $(BOARD_KERNEL_LZ4_COMPRESSION)),true)
 	@echo "Compressing Kernel Image ($(BOARD_KERNEL_IMAGE_NAME))"
 	$(hide) $(LZ4) $(BOARD_KERNEL_LZ4_COMP_FLAGS) $(RECOVERY_KERNEL_OUT)/arch/$(KERNEL_ARCH)/boot/$(KERNEL_IMAGE_NAME) $@
-endif
-ifeq ($(strip $(BOARD_KERNEL_LEGACY_DTB_APPEND)),true)
-	@echo "Appending DTB to Kernel Image ($(BOARD_KERNEL_IMAGE_NAME))"
-	$(hide) if grep -q '^CONFIG_OF=y' $(RECOVERY_KERNEL_CONFIG); then \
-			echo "Building DTBs"; \
-			$(call make-recovery-kernel-target,dtbs); \
-		fi
-	$(hide) cat $(RECOVERY_KERNEL_OUT)/arch/$(KERNEL_ARCH)/boot/$(KERNEL_IMAGE_NAME) $(RECOVERY_KERNEL_OUT)/arch/$(KERNEL_ARCH)/boot/dts/$(TARGET_KERNEL_DTB) > $@
 endif
 
 endif
