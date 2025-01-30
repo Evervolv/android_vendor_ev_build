@@ -506,10 +506,6 @@ $(TARGET_PREBUILT_INT_KERNEL): $(KERNEL_CONFIG) $(DEPMOD) $(DTC) $(LZ4) $(KERNEL
 				($(call make-kernel-modules-target,$$recovery_modules,$(KERNEL_RECOVERY_MODULES_OUT),,$(KERNEL_RECOVERY_DEPMOD_STAGING_DIR),$(BOARD_RECOVERY_RAMDISK_KERNEL_MODULES_LOAD),,)) || exit "$$?"; \
 			) \
 		fi
-ifeq ($(strip $(BOARD_KERNEL_LZ4_COMPRESSION)),true)
-	@echo "Compressing Kernel Image ($(BOARD_KERNEL_IMAGE_NAME))"
-	$(hide) $(LZ4) $(BOARD_KERNEL_LZ4_COMP_FLAGS) $(KERNEL_OUT)/arch/$(KERNEL_ARCH)/boot/$(KERNEL_IMAGE_NAME) $@
-endif
 
 .PHONY: kerneltags
 kerneltags: $(KERNEL_CONFIG)
@@ -622,23 +618,32 @@ $(RECOVERY_KERNEL_CONFIG): $(ALL_RECOVERY_KERNEL_DEFCONFIG_SRCS)
 $(TARGET_PREBUILT_INT_RECOVERY_KERNEL): $(RECOVERY_KERNEL_CONFIG) $(DEPMOD) $(DTC)
 	@echo "Building Recovery Kernel Image ($(KERNEL_IMAGE_NAME))"
 	$(call make-recovery-kernel-target,$(KERNEL_IMAGE_NAME))
-ifeq ($(strip $(BOARD_KERNEL_LZ4_COMPRESSION)),true)
-	@echo "Compressing Kernel Image ($(BOARD_KERNEL_IMAGE_NAME))"
-	$(hide) $(LZ4) $(BOARD_KERNEL_LZ4_COMP_FLAGS) $(RECOVERY_KERNEL_OUT)/arch/$(KERNEL_ARCH)/boot/$(KERNEL_IMAGE_NAME) $@
-endif
 
 endif
 
 ## Install it
 
+ifeq ($(or $(FULL_RECOVERY_KERNEL_BUILD), $(FULL_KERNEL_BUILD)),true)
+
+define compress-kernel-image
+	$(if $(filter true,$(BOARD_KERNEL_LZ4_COMPRESSION)),\
+		$(LZ4) $(BOARD_KERNEL_LZ4_COMP_FLAGS) $(1) $(2))
+endef
+
+endif # FULL_RECOVERY_KERNEL_BUILD or FULL_KERNEL_BUILD
+
 ifeq ($(NEEDS_KERNEL_COPY),true)
 $(INSTALLED_KERNEL_TARGET): $(KERNEL_BIN)
 	$(transform-prebuilt-to-target)
+	$(if $(filter true,$(FULL_KERNEL_BUILD)),\
+		$(call compress-kernel-image,$(KERNEL_BIN),$@))
 endif
 
 ifeq ($(RECOVERY_KERNEL_COPY),true)
 $(INSTALLED_RECOVERY_KERNEL_TARGET): $(RECOVERY_BIN)
 	$(transform-prebuilt-to-target)
+	$(if $(filter true,$(FULL_RECOVERY_KERNEL_BUILD)),\
+		$(call compress-kernel-image,$(RECOVERY_BIN),$@))
 endif
 
 .PHONY: recovery-kernel
