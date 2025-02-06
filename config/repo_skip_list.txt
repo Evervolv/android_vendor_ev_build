@@ -1,3 +1,4 @@
+hardware/qcom/bt - Removed because it is deprecated
 prebuilts/* - Removed because we will update them manually
 packages/apps/Gallery2 - Removed because it is deprecated
 packages/modules/Connectivity - Manual updates required
