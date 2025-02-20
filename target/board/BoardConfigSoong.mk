@@ -38,6 +38,7 @@ SOONG_CONFIG_evervolvGlobalVars += \
     target_health_charging_control_deadline_path \
     target_health_charging_control_supports_bypass \
     target_health_charging_control_supports_deadline \
+    target_health_charging_control_supports_limit \
     target_health_charging_control_supports_toggle \
     target_init_vendor_lib \
     target_ld_shim_libs \
@@ -86,6 +87,7 @@ TARGET_HEALTH_CHARGING_CONTROL_CHARGING_ENABLED ?= 1
 TARGET_HEALTH_CHARGING_CONTROL_CHARGING_DISABLED ?= 0
 TARGET_HEALTH_CHARGING_CONTROL_SUPPORTS_BYPASS ?= true
 TARGET_HEALTH_CHARGING_CONTROL_SUPPORTS_DEADLINE ?= false
+TARGET_HEALTH_CHARGING_CONTROL_SUPPORTS_LIMIT ?= false
 TARGET_HEALTH_CHARGING_CONTROL_SUPPORTS_TOGGLE ?= true
 TARGET_KEYMASTER_WAIT_FOR_QSEE ?= false
 TARGET_USES_LEGACY_HIDL_CONSTRUCTOR ?= $(if $(call math_lt,$(PRODUCT_SHIPPING_API_LEVEL),33),true))
@@ -106,6 +108,7 @@ SOONG_CONFIG_evervolvGlobalVars_target_health_charging_control_charging_disabled
 SOONG_CONFIG_evervolvGlobalVars_target_health_charging_control_deadline_path := $(TARGET_HEALTH_CHARGING_CONTROL_DEADLINE_PATH)
 SOONG_CONFIG_evervolvGlobalVars_target_health_charging_control_supports_bypass := $(TARGET_HEALTH_CHARGING_CONTROL_SUPPORTS_BYPASS)
 SOONG_CONFIG_evervolvGlobalVars_target_health_charging_control_supports_deadline := $(TARGET_HEALTH_CHARGING_CONTROL_SUPPORTS_DEADLINE)
+SOONG_CONFIG_evervolvGlobalVars_target_health_charging_control_supports_limit := $(TARGET_HEALTH_CHARGING_CONTROL_SUPPORTS_LIMIT)
 SOONG_CONFIG_evervolvGlobalVars_target_health_charging_control_supports_toggle := $(TARGET_HEALTH_CHARGING_CONTROL_SUPPORTS_TOGGLE)
 SOONG_CONFIG_evervolvGlobalVars_uses_legacy_contructor_map := $(TARGET_USES_LEGACY_HIDL_CONSTRUCTOR)
 SOONG_CONFIG_evervolvQcomVars_gralloc_handle_has_custom_content_md_reserved_size := $(TARGET_GRALLOC_HANDLE_HAS_CUSTOM_CONTENT_MD_RESERVED_SIZE)
