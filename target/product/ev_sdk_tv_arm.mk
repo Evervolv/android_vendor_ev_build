@@ -24,3 +24,6 @@ PRODUCT_ENFORCE_ARTIFACT_PATH_REQUIREMENTS := relaxed
 # Overrides
 PRODUCT_NAME := ev_sdk_tv_arm
 PRODUCT_MODEL := Evervolv Android TV SDK built for ARM
+
+PRODUCT_SDK_ADDON_NAME := evervolv
+PRODUCT_SDK_ADDON_SYS_IMG_SOURCE_PROP := $(LOCAL_PATH)/source.properties
