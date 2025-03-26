@@ -70,12 +70,6 @@ SOONG_CONFIG_evervolvQcomVars += \
     uses_pre_uplink_features_netmgrd \
     uses_qcom_bsp_legacy
 
-# Only create display_headers_namespace var if dealing with UM platforms to avoid breaking build for all other platforms
-ifneq ($(filter $(UM_PLATFORMS),$(TARGET_BOARD_PLATFORM)),)
-SOONG_CONFIG_evervolvQcomVars += \
-    qcom_display_headers_namespace
-endif
-
 # Set default values
 TARGET_DISABLE_POSTRENDER_CLEANUP ?= false
 TARGET_GRALLOC_HANDLE_HAS_CUSTOM_CONTENT_MD_RESERVED_SIZE ?= false
@@ -147,9 +141,4 @@ SOONG_CONFIG_evervolvGlobalVars_target_surfaceflinger_udfps_lib := $(TARGET_SURF
 SOONG_CONFIG_evervolvGlobalVars_target_trust_usb_control_path := $(TARGET_TRUST_USB_CONTROL_PATH)
 SOONG_CONFIG_evervolvGlobalVars_target_trust_usb_control_enable := $(TARGET_TRUST_USB_CONTROL_ENABLE)
 SOONG_CONFIG_evervolvGlobalVars_target_trust_usb_control_disable := $(TARGET_TRUST_USB_CONTROL_DISABLE)
-ifneq ($(filter $(QSSI_SUPPORTED_PLATFORMS),$(TARGET_BOARD_PLATFORM)),)
-    SOONG_CONFIG_evervolvQcomVars_qcom_display_headers_namespace := vendor/qcom/opensource/commonsys-intf/display
-else
-    SOONG_CONFIG_evervolvQcomVars_qcom_display_headers_namespace := $(QCOM_SOONG_NAMESPACE)/display
-endif
 SOONG_CONFIG_evervolvQcomVars_qti_vibrator_effect_lib := $(TARGET_QTI_VIBRATOR_EFFECT_LIB)
