@@ -181,6 +181,7 @@ ifneq ($(TARGET_KERNEL_NO_GCC),true)
 endif
 
 # LLVM
+DEFAULT_KERNEL_CLANG_VERSION := r536225
 ifneq ($(KERNEL_VERSION),)
     ifeq ($(KERNEL_CLANG_VERSION),)
         ifeq ($(shell expr $(KERNEL_VERSION) \== 5), 1)
@@ -196,7 +197,7 @@ ifneq ($(KERNEL_VERSION),)
         endif
     endif
 endif
-KERNEL_CLANG_VERSION ?= r536225
+KERNEL_CLANG_VERSION ?= $(DEFAULT_KERNEL_CLANG_VERSION)
 
 ifneq ($(TARGET_KERNEL_CLANG_VERSION),)
 TARGET_KERNEL_CLANG_VERSION := clang-$(TARGET_KERNEL_CLANG_VERSION)
@@ -207,6 +208,15 @@ ifneq ($(filter r416183b r450784e, $(KERNEL_CLANG_VERSION)),)
     TARGET_KERNEL_CLANG_PATH := $(BUILD_TOP)/prebuilts/evervolv-tools/$(HOST_PREBUILT_TAG)/$(TARGET_KERNEL_CLANG_VERSION)
 endif
 TARGET_KERNEL_CLANG_PATH ?= $(BUILD_TOP)/prebuilts/clang/host/$(HOST_PREBUILT_TAG)/$(TARGET_KERNEL_CLANG_VERSION)
+
+ifeq ($(wildcard $(TARGET_KERNEL_CLANG_PATH)/bin/clang),)
+    $(warning *****************************************************)
+    $(warning * The version of LLVM defined is not found.         *)
+    $(warning * Using default version as a fallback.              *)
+    $(warning * THIS MIGHT RESULT IN ERRORS OR NON-BOOTING IMAGE. *)
+    $(warning *****************************************************)
+    TARGET_KERNEL_CLANG_PATH := $(BUILD_TOP)/prebuilts/evervolv-tools/$(HOST_PREBUILT_TAG)/$(DEFAULT_KERNEL_CLANG_VERSION)
+endif
 
 ifneq ($(TARGET_KERNEL_NO_GCC),true)
     ifeq ($(KERNEL_ARCH),arm64)
