@@ -92,6 +92,7 @@ KERNEL_VERSION := $(shell grep -s "^VERSION = " $(TARGET_KERNEL_SOURCE)/Makefile
 KERNEL_PATCHLEVEL := $(shell grep -s "^PATCHLEVEL = " $(TARGET_KERNEL_SOURCE)/Makefile | awk '{ print $$3 }')
 KERNEL_SUBLEVEL := $(shell grep -s "^SUBLEVEL = " $(TARGET_KERNEL_SOURCE)/Makefile | awk '{ print $$3 }')
 TARGET_KERNEL_VERSION := $(KERNEL_VERSION).$(KERNEL_PATCHLEVEL)
+TARGET_KERNEL_VERSION_INT := $(shell echo $$(( ($(KERNEL_VERSION) * 100 + $(KERNEL_PATCHLEVEL)) * 1000 + $(KERNEL_SUBLEVEL) )))
 
 # Architecture
 TARGET_KERNEL_ARCH := $(strip $(TARGET_KERNEL_ARCH))
@@ -124,15 +125,10 @@ ifneq ($(USE_CCACHE),)
 endif
 
 # Compilation tools
-ifneq ($(KERNEL_VERSION),)
-    ifeq ($(shell expr $(KERNEL_VERSION) \== 5), 1)
-        ifeq ($(shell expr $(KERNEL_PATCHLEVEL) \>= 10), 1)
-            TARGET_KERNEL_NO_GCC ?= true
-        endif
-    endif
-    ifeq ($(shell expr $(KERNEL_VERSION) \>= 6), 1)
-        TARGET_KERNEL_NO_GCC ?= true
-    endif
+ifeq ($(shell [ $(TARGET_KERNEL_VERSION_INT) -le 510000 ] && echo 1 || echo 0), 1)
+    TARGET_KERNEL_NO_GCC ?= false
+else
+    TARGET_KERNEL_NO_GCC ?= true
 endif
 
 ifeq ($(TARGET_KERNEL_NO_GCC),true)
@@ -140,16 +136,8 @@ ifeq ($(TARGET_KERNEL_NO_GCC),true)
 endif
 
 # 6.11+ can no longer use aosp glibc sysroot headers (too old)
-ifneq ($(KERNEL_VERSION),)
-    ifeq ($(shell expr $(KERNEL_VERSION) \< 6), 1)
-        # empty
-    else ifeq ($(KERNEL_VERSION), 6)
-        ifeq ($(shell expr $(KERNEL_PATCHLEVEL) \>= 11), 1)
-            TARGET_KERNEL_LIBC_SYSROOT_USE ?= host
-        endif
-    else
-        TARGET_KERNEL_LIBC_SYSROOT_USE ?= host
-    endif
+ifeq ($(shell [ $(TARGET_KERNEL_VERSION_INT) -gt 611000 ] && echo 1 || echo 0), 1)
+    TARGET_KERNEL_LIBC_SYSROOT_USE ?= host
 endif
 
 KERNEL_CROSS_COMPILE := 
@@ -182,20 +170,14 @@ endif
 
 # LLVM
 DEFAULT_KERNEL_CLANG_VERSION := r536225
-ifneq ($(KERNEL_VERSION),)
-    ifeq ($(KERNEL_CLANG_VERSION),)
-        ifeq ($(shell expr $(KERNEL_VERSION) \== 5), 1)
-            ifeq ($(shell expr $(KERNEL_PATCHLEVEL) \< 15), 1)
-                KERNEL_CLANG_VERSION := r450784e
-            endif
-        else ifeq ($(shell expr $(KERNEL_VERSION) \< 5), 1)
-            ifneq ($(TARGET_KERNEL_LLVM_BINUTILS),true)
-                KERNEL_CLANG_VERSION := r416183b
-            else
-                KERNEL_CLANG_VERSION := r450784e
-            endif
-        endif
+ifeq ($(shell [ $(TARGET_KERNEL_VERSION_INT) -lt 500000 ] && echo 1 || echo 0), 1)
+    ifneq ($(TARGET_KERNEL_LLVM_BINUTILS),true)
+        KERNEL_CLANG_VERSION := r416183b
+    else
+        KERNEL_CLANG_VERSION := r450784e
     endif
+else ifeq ($(shell [ $(TARGET_KERNEL_VERSION_INT) -lt 515000 ] && echo 1 || echo 0), 1)
+    KERNEL_CLANG_VERSION := r450784e
 endif
 KERNEL_CLANG_VERSION ?= $(DEFAULT_KERNEL_CLANG_VERSION)
 
