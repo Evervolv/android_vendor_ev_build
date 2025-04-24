@@ -285,27 +285,6 @@ libhidl_legacy_contructor_map {
 }
 
 soong_config_module_type {
-    name: "bootloader_message_offset",
-    module_type: "cc_defaults",
-    config_namespace: "evervolvGlobalVars",
-    value_variables: ["bootloader_message_offset"],
-    properties: [
-        "cflags",
-        "export_cflags",
-    ],
-}
-
-bootloader_message_offset {
-    name: "bootloader_message_offset_defaults",
-    soong_config_variables: {
-        bootloader_message_offset: {
-            cflags: ["-DBOARD_RECOVERY_BLDRMSG_OFFSET=%s"],
-            export_cflags: ["-DBOARD_RECOVERY_BLDRMSG_OFFSET=%s"],
-        },
-    },
-}
-
-soong_config_module_type {
     name: "qti_vibrator_hal",
     module_type: "cc_defaults",
     config_namespace: "evervolvQcomVars",
