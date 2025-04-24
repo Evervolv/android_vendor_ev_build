@@ -36,9 +36,6 @@ SOONG_CONFIG_evervolvGlobalVars += \
     target_init_vendor_lib \
     target_ld_shim_libs \
     target_power_libperfmgr_mode_extension_lib \
-    target_powershare_path \
-    target_powershare_enabled \
-    target_powershare_disabled \
     target_process_sdk_version_override \
     target_trust_usb_control_path \
     target_trust_usb_control_enable \
@@ -81,8 +78,6 @@ BOOTLOADER_MESSAGE_OFFSET ?= 0
 TARGET_ADDITIONAL_GRALLOC_10_USAGE_BITS ?= 0
 TARGET_INIT_VENDOR_LIB ?= vendor_init
 TARGET_POWER_LIBPERFMGR_MODE_EXTENSION_LIB ?= libperfmgr-ext
-TARGET_POWERSHARE_ENABLED ?= 1
-TARGET_POWERSHARE_DISABLED ?= 0
 TARGET_QTI_VIBRATOR_EFFECT_LIB ?= libqtivibratoreffect
 TARGET_TRUST_USB_CONTROL_PATH ?= /proc/sys/kernel/deny_new_usb
 TARGET_TRUST_USB_CONTROL_ENABLE ?= 1
@@ -94,9 +89,6 @@ SOONG_CONFIG_evervolvGlobalVars_bootloader_message_offset := $(BOOTLOADER_MESSAG
 SOONG_CONFIG_evervolvGlobalVars_target_init_vendor_lib := $(TARGET_INIT_VENDOR_LIB)
 SOONG_CONFIG_evervolvGlobalVars_target_ld_shim_libs := $(subst $(space),:,$(TARGET_LD_SHIM_LIBS))
 SOONG_CONFIG_evervolvGlobalVars_target_power_libperfmgr_mode_extension_lib := $(TARGET_POWER_LIBPERFMGR_MODE_EXTENSION_LIB)
-SOONG_CONFIG_evervolvGlobalVars_target_powershare_path := $(TARGET_POWERSHARE_PATH)
-SOONG_CONFIG_evervolvGlobalVars_target_powershare_enabled := $(TARGET_POWERSHARE_ENABLED)
-SOONG_CONFIG_evervolvGlobalVars_target_powershare_disabled := $(TARGET_POWERSHARE_DISABLED)
 SOONG_CONFIG_evervolvGlobalVars_target_process_sdk_version_override := $(TARGET_PROCESS_SDK_VERSION_OVERRIDE)
 SOONG_CONFIG_evervolvGlobalVars_target_trust_usb_control_path := $(TARGET_TRUST_USB_CONTROL_PATH)
 SOONG_CONFIG_evervolvGlobalVars_target_trust_usb_control_enable := $(TARGET_TRUST_USB_CONTROL_ENABLE)
@@ -127,6 +119,17 @@ ifneq ($(TARGET_HEALTH_CHARGING_CONTROL_SUPPORTS_LIMIT),)
 endif
 ifneq ($(TARGET_HEALTH_CHARGING_CONTROL_SUPPORTS_TOGGLE),)
     $(call soong_config_set,lineage_health,charging_control_supports_toggle,$(TARGET_HEALTH_CHARGING_CONTROL_SUPPORTS_TOGGLE))
+endif
+
+# Lineage PowerShare HAL
+ifneq ($(TARGET_POWERSHARE_PATH),)
+    $(call soong_config_set,lineage_powershare,powershare_path,$(TARGET_POWERSHARE_PATH))
+endif
+ifneq ($(TARGET_POWERSHARE_ENABLED),)
+    $(call soong_config_set,lineage_powershare,powershare_enabled,$(TARGET_POWERSHARE_ENABLED))
+endif
+ifneq ($(TARGET_POWERSHARE_DISABLED),)
+    $(call soong_config_set,lineage_powershare,powershare_disabled,$(TARGET_POWERSHARE_DISABLED))
 endif
 
 # Surfaceflinger
