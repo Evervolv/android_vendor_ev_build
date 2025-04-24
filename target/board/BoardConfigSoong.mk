@@ -35,9 +35,6 @@ SOONG_CONFIG_evervolvGlobalVars += \
     has_memfd_backport \
     target_ld_shim_libs \
     target_process_sdk_version_override \
-    target_trust_usb_control_path \
-    target_trust_usb_control_enable \
-    target_trust_usb_control_disable \
     uses_legacy_contructor_map
 
 SOONG_CONFIG_NAMESPACES += evervolvQcomVars
@@ -75,18 +72,12 @@ SOONG_CONFIG_evervolvQcomVars_uses_qcom_bsp_legacy := $(TARGET_USES_QCOM_BSP_LEG
 BOOTLOADER_MESSAGE_OFFSET ?= 0
 TARGET_ADDITIONAL_GRALLOC_10_USAGE_BITS ?= 0
 TARGET_QTI_VIBRATOR_EFFECT_LIB ?= libqtivibratoreffect
-TARGET_TRUST_USB_CONTROL_PATH ?= /proc/sys/kernel/deny_new_usb
-TARGET_TRUST_USB_CONTROL_ENABLE ?= 1
-TARGET_TRUST_USB_CONTROL_DISABLE ?= 0
 
 # Soong value variables
 SOONG_CONFIG_evervolvGlobalVars_additional_gralloc_10_usage_bits := $(TARGET_ADDITIONAL_GRALLOC_10_USAGE_BITS)
 SOONG_CONFIG_evervolvGlobalVars_bootloader_message_offset := $(BOOTLOADER_MESSAGE_OFFSET)
 SOONG_CONFIG_evervolvGlobalVars_target_ld_shim_libs := $(subst $(space),:,$(TARGET_LD_SHIM_LIBS))
 SOONG_CONFIG_evervolvGlobalVars_target_process_sdk_version_override := $(TARGET_PROCESS_SDK_VERSION_OVERRIDE)
-SOONG_CONFIG_evervolvGlobalVars_target_trust_usb_control_path := $(TARGET_TRUST_USB_CONTROL_PATH)
-SOONG_CONFIG_evervolvGlobalVars_target_trust_usb_control_enable := $(TARGET_TRUST_USB_CONTROL_ENABLE)
-SOONG_CONFIG_evervolvGlobalVars_target_trust_usb_control_disable := $(TARGET_TRUST_USB_CONTROL_DISABLE)
 SOONG_CONFIG_evervolvQcomVars_qti_vibrator_effect_lib := $(TARGET_QTI_VIBRATOR_EFFECT_LIB)
 
 # Lineage Health HAL
@@ -124,6 +115,17 @@ ifneq ($(TARGET_POWERSHARE_ENABLED),)
 endif
 ifneq ($(TARGET_POWERSHARE_DISABLED),)
     $(call soong_config_set,lineage_powershare,powershare_disabled,$(TARGET_POWERSHARE_DISABLED))
+endif
+
+# Lineage USB HAL
+ifneq ($(TARGET_TRUST_USB_CONTROL_PATH),)
+    $(call soong_config_set,lineage_usb,usb_control_path,$(TARGET_TRUST_USB_CONTROL_PATH))
+endif
+ifneq ($(TARGET_TRUST_USB_CONTROL_ENABLE),)
+    $(call soong_config_set,lineage_usb,usb_control_enabled,$(TARGET_TRUST_USB_CONTROL_ENABLE))
+endif
+ifneq ($(TARGET_TRUST_USB_CONTROL_DISABLE),)
+    $(call soong_config_set,lineage_usb,usb_control_disabled,$(TARGET_TRUST_USB_CONTROL_DISABLE))
 endif
 
 # Power HAL
