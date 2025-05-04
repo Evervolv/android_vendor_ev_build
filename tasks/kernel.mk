@@ -66,7 +66,9 @@
 #                                          modules in vendor_overlay instead of vendor
 #
 #   TARGET_MERGE_DTBS_WILDCARD         = Optional, limits the .dtb files used to generate the
-#                                          final DTB image when using QCOM's merge_dtbs script.
+#                                          final DTB image. Deprecated.
+#   TARGET_DTB_LIST_WILDCARD           = Optional, similar to the above one, but allows multiple
+#                                          patterns.
 
 ifneq ($(TARGET_NO_KERNEL),true)
 ifneq ($(TARGET_NO_KERNEL_OVERRIDE),true)
@@ -79,7 +81,12 @@ RECOVERY_DEFCONFIG := $(TARGET_KERNEL_RECOVERY_CONFIG)
 VARIANT_DEFCONFIG := $(TARGET_KERNEL_VARIANT_CONFIG)
 SELINUX_DEFCONFIG := $(TARGET_KERNEL_SELINUX_CONFIG)
 # dtb generation - optional
-TARGET_MERGE_DTBS_WILDCARD ?= *
+ifneq ($(TARGET_MERGE_DTBS_WILDCARD),)
+TARGET_DTB_LIST_WILDCARD ?= $(TARGET_MERGE_DTBS_WILDCARD)
+else
+TARGET_DTB_LIST_WILDCARD ?= *
+endif
+# recovery modules.load fallback - optional
 BOARD_RECOVERY_KERNEL_MODULES_LOAD ?= $(BOARD_RECOVERY_RAMDISK_KERNEL_MODULES_LOAD)
 
 ## Internal variables
@@ -621,10 +628,9 @@ ifeq ($(BOARD_USES_QCOM_MERGE_DTBS_SCRIPT),true)
 	$(hide) find $(DTBS_OUT) -type f -name "*.dtb*" | xargs rm -f
 	mv $(DTB_OUT)/arch/$(KERNEL_ARCH)/boot/dts/vendor/*/*.dtb $(DTB_OUT)/arch/$(KERNEL_ARCH)/boot/dts/vendor/*/*.dtbo $(DTBS_BASE)/
 	PATH=$(abspath $(HOST_OUT_EXECUTABLES)):$${PATH} python3 $(SRC_EVERVOLV_DIR)/build/tools/merge_dtbs.py --base $(DTBS_BASE) --techpack $(DTB_OUT)/arch/$(KERNEL_ARCH)/boot/dts/vendor/qcom --out $(DTBS_OUT)
-	cat $(shell find $(DTB_OUT)/out -type f -name "${TARGET_MERGE_DTBS_WILDCARD}.dtb" | sort) > $@
-else
-	cat $(shell find $(DTB_OUT)/arch/$(KERNEL_ARCH)/boot/dts -type f -name "*.dtb" | sort) > $@
 endif # BOARD_USES_QCOM_MERGE_DTBS_SCRIPT
+	$(foreach dtb,$(TARGET_DTB_LIST_WILDCARD),\
+		cat `find $(DTB_OUT)/arch/$(KERNEL_ARCH)/boot/dts/$(dir $(dtb)) -type f -name "$(notdir $(dtb)).dtb" | sort` >> $@;)true
 endif # BOARD_DTB_CFG
 	$(hide) touch -c $(DTB_OUT)
 endif # !BOARD_PREBUILT_DTBIMAGE_DIR
