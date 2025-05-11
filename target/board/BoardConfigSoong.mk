@@ -15,16 +15,8 @@ EXPORT_TO_SOONG := \
 # Documentation here:
 # https://github.com/Evervolv/android_build_soong/commit/8328367c44085b948c003116c0ed74a047237a69
 
-SOONG_CONFIG_NAMESPACES += evervolvVarsPlugin
-
-SOONG_CONFIG_evervolvVarsPlugin :=
-
-define addVar
-  SOONG_CONFIG_evervolvVarsPlugin += $(1)
-  SOONG_CONFIG_evervolvVarsPlugin_$(1) := $($1)
-endef
-
-$(foreach v,$(EXPORT_TO_SOONG),$(eval $(call addVar,$(v))))
+$(call add_soong_config_namespace,evervolvVarsPlugin)
+$(foreach v,$(EXPORT_TO_SOONG),$(eval $(call add_soong_config_var,evervolvVarsPlugin,$(v))))
 
 SOONG_CONFIG_NAMESPACES += evervolvGlobalVars
 SOONG_CONFIG_evervolvGlobalVars += \
