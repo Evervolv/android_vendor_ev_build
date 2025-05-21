@@ -18,47 +18,6 @@ EXPORT_TO_SOONG := \
 $(call add_soong_config_namespace,evervolvVarsPlugin)
 $(foreach v,$(EXPORT_TO_SOONG),$(eval $(call add_soong_config_var,evervolvVarsPlugin,$(v))))
 
-SOONG_CONFIG_NAMESPACES += evervolvGlobalVars
-SOONG_CONFIG_evervolvGlobalVars += \
-    disable_postrender_cleanup \
-    has_legacy_camera_hal1 \
-    has_memfd_backport \
-    target_ld_shim_libs \
-    target_process_sdk_version_override \
-    uses_legacy_contructor_map
-
-SOONG_CONFIG_NAMESPACES += evervolvQcomVars
-SOONG_CONFIG_evervolvQcomVars += \
-    supports_audio_accessory \
-    supports_debug_accessory \
-    uses_pre_uplink_features_netmgrd \
-    uses_qcom_bsp_legacy
-
-# Set default values
-TARGET_DISABLE_POSTRENDER_CLEANUP ?= false
-TARGET_HAS_LEGACY_CAMERA_HAL1 ?= false
-TARGET_HAS_MEMFD_BACKPORT ?= false
-TARGET_KEYMASTER_WAIT_FOR_QSEE ?= false
-TARGET_USES_LEGACY_HIDL_CONSTRUCTOR ?= $(if $(call math_lt,$(PRODUCT_SHIPPING_API_LEVEL),33),true))
-TARGET_USES_PRE_UPLINK_FEATURES_NETMGRD ?= false
-TARGET_USES_QCOM_BSP_LEGACY ?= false
-TARGET_QTI_USB_SUPPORTS_AUDIO_ACCESSORY ?= false
-TARGET_QTI_USB_SUPPORTS_DEBUG_ACCESSORY ?= false
-
-# Soong bool variables
-SOONG_CONFIG_evervolvGlobalVars_disable_postrender_cleanup := $(TARGET_DISABLE_POSTRENDER_CLEANUP)
-SOONG_CONFIG_evervolvGlobalVars_has_legacy_camera_hal1 := $(TARGET_HAS_LEGACY_CAMERA_HAL1)
-SOONG_CONFIG_evervolvGlobalVars_has_memfd_backport := $(TARGET_HAS_MEMFD_BACKPORT)
-SOONG_CONFIG_evervolvGlobalVars_uses_legacy_contructor_map := $(TARGET_USES_LEGACY_HIDL_CONSTRUCTOR)
-SOONG_CONFIG_evervolvQcomVars_supports_audio_accessory := $(TARGET_QTI_USB_SUPPORTS_AUDIO_ACCESSORY)
-SOONG_CONFIG_evervolvQcomVars_supports_debug_accessory := $(TARGET_QTI_USB_SUPPORTS_DEBUG_ACCESSORY)
-SOONG_CONFIG_evervolvQcomVars_uses_pre_uplink_features_netmgrd := $(TARGET_USES_PRE_UPLINK_FEATURES_NETMGRD)
-SOONG_CONFIG_evervolvQcomVars_uses_qcom_bsp_legacy := $(TARGET_USES_QCOM_BSP_LEGACY)
-
-# Soong value variables
-SOONG_CONFIG_evervolvGlobalVars_target_ld_shim_libs := $(subst $(space),:,$(TARGET_LD_SHIM_LIBS))
-SOONG_CONFIG_evervolvGlobalVars_target_process_sdk_version_override := $(TARGET_PROCESS_SDK_VERSION_OVERRIDE)
-
 # Libui
 ifneq ($(TARGET_ADDITIONAL_GRALLOC_10_USAGE_BITS),)
     $(call soong_config_set,libui,additional_gralloc_10_usage_bits,$(TARGET_ADDITIONAL_GRALLOC_10_USAGE_BITS))
