@@ -19,6 +19,16 @@ EXPORT_TO_SOONG := \
 $(call add_soong_config_namespace,evervolvVarsPlugin)
 $(foreach v,$(EXPORT_TO_SOONG),$(eval $(call add_soong_config_var,evervolvVarsPlugin,$(v))))
 
+# Bootanimation
+TARGET_BOOTANIMATION_HALF_RES ?= false
+$(call soong_config_set,lineage_bootanimation,height,$(TARGET_SCREEN_HEIGHT))
+$(call soong_config_set,lineage_bootanimation,width,$(TARGET_SCREEN_WIDTH))
+$(call soong_config_set,lineage_bootanimation,half_res,$(TARGET_BOOTANIMATION_HALF_RES))
+
+ifneq ($(TARGET_BOOTANIMATION),)
+$(call soong_config_set,lineage_bootanimation,prebuilt_file,$(TARGET_BOOTANIMATION))
+endif
+
 # Libui
 ifneq ($(TARGET_ADDITIONAL_GRALLOC_10_USAGE_BITS),)
     $(call soong_config_set,libui,additional_gralloc_10_usage_bits,$(TARGET_ADDITIONAL_GRALLOC_10_USAGE_BITS))
