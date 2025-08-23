@@ -57,8 +57,8 @@ evervolv_generator {
 }
 
 bootstrap_go_package {
-    name: "soong-lineage-mkdir",
-    pkgPath: "lineage/soong/mkdir",
+    name: "soong-evervolv-mkdir",
+    pkgPath: "evervolv/soong/mkdir",
     deps: [
         "blueprint",
         "blueprint-pathtools",
