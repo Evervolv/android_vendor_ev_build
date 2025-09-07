@@ -319,6 +319,7 @@ define make-kernel-modules-target
     cp $(1) $(2)/lib/modules$(6)
     rm -rf $(4)
     mkdir -p $(4)/lib/modules/0.0/$(3)lib/modules$(6)
+    cp $(KERNEL_OUT)/modules.{order,builtin,builtin.modinfo} $(4)/lib/modules/0.0 2>/dev/null || true
     cp $(1) $(4)/lib/modules/0.0/$(3)lib/modules$(6)
     if [ -n "$(8)" ]; then cp -r $(8) $(4)/lib/modules/0.0/; fi
     $(DEPMOD) -ae -F $(KERNEL_OUT)/System.map -b $(4) 0.0 2>$(4)/depmod_stderr
@@ -330,8 +331,7 @@ define make-kernel-modules-target
     fi
     rm -f $(4)/depmod_stderr
     sed -e 's/\(.*modules.*\):/\/\1:/g' -e 's/ \([^ ]*modules[^ ]*\)/ \/\1/g' $(4)/lib/modules/0.0/modules.dep > $(2)/lib/modules$(6)/modules.dep
-    cp $(4)/lib/modules/0.0/modules.softdep $(2)/lib/modules$(6)
-    cp $(4)/lib/modules/0.0/modules.alias $(2)/lib/modules$(6)
+    cp $(4)/lib/modules/0.0/modules.{alias,softdep} $(2)/lib/modules$(6) 2>/dev/null || true
     rm -f $(2)/lib/modules$(6)/modules.load
     for MODULE in $(5); do \
         NAME=$$(basename $$MODULE .ko); \
